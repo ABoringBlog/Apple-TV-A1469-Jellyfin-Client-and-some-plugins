@@ -1,4 +1,6 @@
 # Apple TV 3 Modernization
+ALL WORK DONE BY CHATGPT
+所有的工作都是ChatGPT完成的
 
 [English-only README](README_EN.md)
 
