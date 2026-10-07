@@ -48,7 +48,7 @@ The managed .deb itself has **not yet been separately installed and accepted on 
 
 Download Clock v0.1.5 and SHA256SUMS here:
 
-**[Clock v0.1.5 Release](https://github.com/ABoringBlog/Apple-TV-A1469-/releases/tag/clock-v0.1.5)**
+**[Clock v0.1.5 Release](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/clock-v0.1.5)**
 
 Clock is independent from RetroReel3. Do not use the RetroReel3 package to install Clock.
 

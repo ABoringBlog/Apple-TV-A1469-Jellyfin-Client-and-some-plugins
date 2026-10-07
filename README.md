@@ -10,10 +10,13 @@ Independent open-source applications for **jailbroken Apple TV 3 (A1469 / AppleT
 
 | App | Description / 功能 | Release |
 | --- | --- | --- |
-| **[RetroReel3](#retroreel3-jellyfin-client)** | Independent, unofficial native client for Jellyfin / 非官方 Jellyfin 原生客户端 | [v0.5.85-brand1](https://github.com/ABoringBlog/Apple-TV-A1469-/releases/tag/v0.5.85-brand1) |
-| **[Clock](Clock/)** | Native standalone clock / 原生独立时钟 | [clock-v0.1.5](https://github.com/ABoringBlog/Apple-TV-A1469-/releases/tag/clock-v0.1.5) |
+| **[RetroReel3](#retroreel3-jellyfin-client)** | Independent, unofficial native client for Jellyfin / 非官方 Jellyfin 原生客户端 | [v0.5.85-brand1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/v0.5.85-brand1) |
+| **[Clock](Clock/)** | Native standalone clock / 原生独立时钟 | [clock-v0.1.5](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/clock-v0.1.5) |
+| **[Weather](Weather/)** | Native weather, English + 中文; requires Mac ATV3Bridge 24/7 / 原生天气，依赖 Mac 24 小时桥接 | [weather-v1.0.0-public1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public1) |
 
-**Both apps are free and do not require sponsorship. / 所有应用免费，赞助完全自愿。**
+**All apps are free and do not require sponsorship. / 所有应用免费，赞助完全自愿。**
+
+> **Weather architecture note / Weather 架构说明：** the current Weather app requires a Mac running ATV3Bridge continuously (24/7) for fresh live data. / 当前 Weather 需要一台 Mac 24 小时运行 ATV3Bridge 才能持续获取实时天气。
 
 ---
 
@@ -41,7 +44,7 @@ Native Jellyfin appliance for jailbroken **Apple TV 3 (A1469 / AppleTV3,2)**. No
 
 ### Install / 安装
 
-Download the `.deb` file and `SHA256SUMS` from the [RetroReel3 v0.5.85 Release](https://github.com/ABoringBlog/Apple-TV-A1469-/releases/tag/v0.5.85-brand1). On your Mac/Linux computer, verify the SHA256 listed in `SHA256SUMS`, then run:
+Download the `.deb` file and `SHA256SUMS` from the [RetroReel3 v0.5.85 Release](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/v0.5.85-brand1). On your Mac/Linux computer, verify the SHA256 listed in `SHA256SUMS`, then run:
 
 从 RetroReel3 v0.5.85 Release 下载 `.deb` 和 `SHA256SUMS`，先校验哈希，再在 Mac/Linux 终端执行：
 
@@ -99,6 +102,6 @@ ABoringBlog 原创的 RetroReel3、Clock 源码及项目文档采用 [MIT Licens
 
 ### Project notes / 项目文档
 
-The historical [PROGRESS.md](PROGRESS.md) and [docs](docs/) record development stages; older passages may describe pre-device prototypes and should not be interpreted as the current release status. See the [Releases](https://github.com/ABoringBlog/Apple-TV-A1469-/releases) page for published versions.
+The historical [PROGRESS.md](PROGRESS.md) and [docs](docs/) record development stages; older passages may describe pre-device prototypes and should not be interpreted as the current release status. See the [Releases](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases) page for published versions.
 
 历史开发记录可能描述早期尚未真机验证的状态，请以最新 Release 为准。

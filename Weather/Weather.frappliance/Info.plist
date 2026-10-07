@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BLForceLegacyNav</key>
+	<false/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>Weather</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.atv3.weather</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Weather</string>
+	<key>CFBundlePackageType</key>
+	<string>BNDL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleSignature</key>
+	<string>clok</string>
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>iPhoneOS</string>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>1.0.0</string>
+	<key>FRApplianceDataSourceType</key>
+	<string>All</string>
+	<key>FRApplianceName</key>
+	<string>Weather</string>
+	<key>FRAppliancePreferedOrderValue</key>
+	<integer>6</integer>
+	<key>FRHideIfNoCategories</key>
+	<false/>
+	<key>FRRemoteAppliance</key>
+	<true/>
+	<key>MinimumOSVersion</key>
+	<string>8.0</string>
+	<key>NSPrincipalClass</key>
+	<string>WeatherAppliance</string>
+</dict>
+</plist>

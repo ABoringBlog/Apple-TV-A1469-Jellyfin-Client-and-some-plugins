@@ -1,6 +1,6 @@
 # Apple TV 3 Modernization
 
-[← Bilingual README](README.md) · [Clock English README](Clock/README_EN.md)
+[← Bilingual README](README.md) · [Clock English README](Clock/README_EN.md) · [Weather English README](Weather/README_EN.md)
 
 Independent open-source applications for **jailbroken Apple TV 3 (A1469 / AppleTV3,2)**.
 
@@ -10,8 +10,11 @@ Each application is independently installable, has its own package ID and releas
 
 | App | Description | Current release |
 | --- | --- | --- |
-| **RetroReel3** | Independent, unofficial native Jellyfin client | [v0.5.85-brand1](https://github.com/ABoringBlog/Apple-TV-A1469-/releases/tag/v0.5.85-brand1) |
-| **Clock** | Native standalone Apple TV 3 clock | [clock-v0.1.5](https://github.com/ABoringBlog/Apple-TV-A1469-/releases/tag/clock-v0.1.5) |
+| **RetroReel3** | Independent, unofficial native Jellyfin client | [v0.5.85-brand1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/v0.5.85-brand1) |
+| **Clock** | Native standalone Apple TV 3 clock | [clock-v0.1.5](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/clock-v0.1.5) |
+| **Weather** | Native weather in English or Chinese; requires Mac ATV3Bridge 24/7 | [weather-v1.0.0-public1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public1) |
+
+> **Weather runtime requirement:** the current Weather app requires a Mac running ATV3Bridge continuously (24/7) for fresh live data.
 
 ## RetroReel3
 
@@ -56,7 +59,7 @@ Selecting subtitles may cause the server to transcode video depending on media a
 
 Download the package and SHA256SUMS from:
 
-**[RetroReel3 v0.5.85-brand1](https://github.com/ABoringBlog/Apple-TV-A1469-/releases/tag/v0.5.85-brand1)**
+**[RetroReel3 v0.5.85-brand1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/v0.5.85-brand1)**
 
 ### Installation
 

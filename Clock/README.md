@@ -23,7 +23,7 @@ An independently installable native clock appliance for a **jailbroken Apple TV 
 
 The independent Clock v0.1.5 installer and SHA256SUMS are available at:
 
-https://github.com/ABoringBlog/Apple-TV-A1469-/releases/tag/clock-v0.1.5
+https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/clock-v0.1.5
 
 Do not use the RetroReel3 package to install Clock. The two projects have separate package IDs.
 

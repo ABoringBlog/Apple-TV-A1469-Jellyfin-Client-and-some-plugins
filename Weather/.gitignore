@@ -1,0 +1,10 @@
+/build/
+*.o
+*.d
+*.deb
+*.pyc
+__pycache__/
+.DS_Store
+Bridge/weather_config.json
+Bridge/weather_cache.json
+Bridge/*.log
