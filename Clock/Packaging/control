@@ -1,0 +1,7 @@
+Package: org.atv3.clock
+Name: Clock for Apple TV 3
+Version: 0.1.5
+Architecture: iphoneos-arm
+Description: Native Clock appliance for Apple TV 3
+Maintainer: ATV3 Modernization
+Section: Utilities
