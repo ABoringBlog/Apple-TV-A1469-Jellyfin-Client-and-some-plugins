@@ -1,0 +1,216 @@
+{
+  "/jellyfin/Items?UserId=user1&ParentId=lib1&IncludeItemTypes=Movie&Recursive=true&StartIndex=0&Limit=1&SortBy=SortName&SortOrder=Ascending&Fields=Overview,MediaSources": {
+    "status": 200,
+    "body": {
+      "Items": [
+        {
+          "Id": "movie1",
+          "Name": "Movie",
+          "Type": "Movie"
+        }
+      ]
+    }
+  },
+  "/jellyfin/Items?UserId=user1&ParentId=lib1&IncludeItemTypes=Movie&Recursive=true&StartIndex=1&Limit=1&SortBy=SortName&SortOrder=Ascending&Fields=Overview,MediaSources": {
+    "status": 200,
+    "body": {
+      "Items": []
+    }
+  },
+  "/jellyfin/Items?UserId=user1&ParentId=lib1&IncludeItemTypes=Movie&Recursive=true&StartIndex=0&Limit=100&SortBy=SortName&SortOrder=Ascending&Fields=Overview,MediaSources": {
+    "status": 200,
+    "body": {
+      "Items": [
+        {
+          "Id": "movie1",
+          "Name": "Movie",
+          "Type": "Movie"
+        }
+      ]
+    }
+  },
+  "/jellyfin/Items?UserId=user1&ParentId=lib1&IncludeItemTypes=Series&Recursive=true&StartIndex=0&Limit=1&SortBy=SortName&SortOrder=Ascending&Fields=Overview,MediaSources": {
+    "status": 200,
+    "body": {
+      "Items": [
+        {
+          "Id": "series1",
+          "Name": "Series",
+          "Type": "Series",
+          "ProductionYear": 2020,
+          "ImageTags": {
+            "Primary": "series-tag1"
+          }
+        }
+      ]
+    }
+  },
+  "/jellyfin/Items?UserId=user1&ParentId=lib1&IncludeItemTypes=Series&Recursive=true&StartIndex=1&Limit=1&SortBy=SortName&SortOrder=Ascending&Fields=Overview,MediaSources": {
+    "status": 200,
+    "body": {
+      "Items": []
+    }
+  },
+  "/jellyfin/Items?UserId=user1&ParentId=lib1&IncludeItemTypes=Series&Recursive=true&StartIndex=0&Limit=100&SortBy=SortName&SortOrder=Ascending&Fields=Overview,MediaSources": {
+    "status": 200,
+    "body": {
+      "Items": [
+        {
+          "Id": "series1",
+          "Name": "Series",
+          "Type": "Series",
+          "ProductionYear": 2020,
+          "ImageTags": {
+            "Primary": "series-tag1"
+          }
+        }
+      ]
+    }
+  },
+  "/jellyfin/Shows/series1/Seasons?UserId=user1": {
+    "status": 200,
+    "body": {
+      "Items": [
+        {
+          "Id": "season1",
+          "Name": "Season 1",
+          "Type": "Season",
+          "IndexNumber": 1
+        }
+      ]
+    }
+  },
+  "/jellyfin/Shows/series1/Episodes?UserId=user1&SeasonId=season1&Fields=Overview,MediaSources": {
+    "status": 200,
+    "body": {
+      "Items": [
+        {
+          "Id": "episode1",
+          "Name": "Pilot",
+          "Type": "Episode",
+          "ParentIndexNumber": 1,
+          "IndexNumber": 1,
+          "ImageTags": {"Primary": "episode-primary"}
+        }
+      ]
+    }
+  },
+  "/jellyfin/Users/user1/Items/movie1?Fields=MediaSources": {
+    "status": 200,
+    "body": {
+      "Id": "movie1",
+      "Name": "Movie",
+      "Type": "Movie",
+      "ProductionYear": 1999,
+      "RunTimeTicks": 61200000000,
+      "CommunityRating": 8.25,
+      "CustomRating": "R",
+      "Genres": ["Drama", "Crime"],
+      "Overview": "Detail",
+      "MediaSources": [
+        {
+          "Id": "source1",
+          "Container": "mp4"
+        }
+      ]
+    }
+  },
+  "/jellyfin/Users/user1/Items/episode1?Fields=MediaSources": {
+    "status": 200,
+    "body": {
+      "Id": "episode1",
+      "Name": "Episode",
+      "Type": "Episode",
+      "ParentIndexNumber": 1,
+      "IndexNumber": 2,
+      "ProductionYear": 2020,
+      "RunTimeTicks": 27000000000,
+      "CommunityRating": 7.9,
+      "OfficialRating": "TV-14",
+      "Genres": ["Drama"],
+      "Overview": "Detail",
+      "MediaSources": [
+        {
+          "Id": "source1",
+          "Container": "mp4"
+        }
+      ]
+    }
+  },
+  "/jellyfin/Items/movie1/PlaybackInfo?UserId=user1": {
+    "status": 200,
+    "body": {
+      "MediaSources": [
+        {
+          "Id": "source1",
+          "Container": "mp4"
+        }
+      ]
+    }
+  },
+  "/jellyfin/Items/broken/PlaybackInfo?UserId=user1": {
+    "status": 200,
+    "body": {
+      "MediaSources": [
+        null
+      ]
+    }
+  },
+  "/jellyfin/Users/user1/Items/broken?Fields=MediaSources": {
+    "status": 200,
+    "body": {
+      "Id": "wrong",
+      "Name": "Broken",
+      "Type": "Movie"
+    }
+  },
+  "/jellyfin/Shows/broken/Seasons?UserId=user1": {
+    "status": 200,
+    "body": {
+      "Items": [
+        null
+      ]
+    }
+  },
+  "/jellyfin/Shows/denied/Seasons?UserId=user1": {
+    "status": 401,
+    "body": {}
+  },
+  "/jellyfin/Items?UserId=user1&ParentId=lib1&IncludeItemTypes=Movie&Recursive=true&StartIndex=0&Limit=101&SortBy=SortName&SortOrder=Ascending&Fields=Overview,MediaSources": {
+    "status": 200,
+    "body": {
+      "Items": [
+        {
+          "Id": "movie1",
+          "Name": "Movie",
+          "Type": "Movie",
+          "ProductionYear": 1999,
+          "RunTimeTicks": 1000,
+          "UserData": {
+            "Played": false,
+            "PlaybackPositionTicks": 420
+          },
+          "ImageTags": {
+            "Primary": "tag1"
+          }
+        }
+      ]
+    }
+  },
+  "/jellyfin/Items?UserId=user1&ParentId=lib1&IncludeItemTypes=Series&Recursive=true&StartIndex=0&Limit=101&SortBy=SortName&SortOrder=Ascending&Fields=Overview,MediaSources": {
+    "status": 200,
+    "body": {
+      "Items": [
+        {
+          "Id": "series1",
+          "Name": "Series",
+          "Type": "Series",
+          "ProductionYear": 2020,
+          "ImageTags": {
+            "Primary": "series-tag1"
+          }
+        }
+      ]
+    }
+  }
+}

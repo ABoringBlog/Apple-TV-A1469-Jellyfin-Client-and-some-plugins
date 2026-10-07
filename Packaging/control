@@ -1,0 +1,7 @@
+Package: org.jellyfin.atv3
+Name: RetroReel3
+Version: 0.5.85-brand1
+Architecture: iphoneos-arm
+Description: Unofficial native Jellyfin client for jailbroken Apple TV 3
+Maintainer: ABoringBlog
+Section: Multimedia

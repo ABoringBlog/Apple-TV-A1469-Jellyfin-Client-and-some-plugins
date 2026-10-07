@@ -1,0 +1,12 @@
+/build/
+__pycache__/
+.DS_Store
+/armv7_test
+/armv7_test.o
+/armv7_test_signed
+
+/recovery.git/
+/checkpoints/
+
+/device-evidence/
+/logs/

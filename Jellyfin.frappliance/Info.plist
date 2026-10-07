@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BLForceLegacyNav</key>
+	<false/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>Jellyfin</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.jellyfin.atv3</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>RetroReel3</string>
+	<key>CFBundlePackageType</key>
+	<string>BNDL</string>
+	<key>CFBundleSignature</key>
+	<string>fnrw</string>
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>iPhoneOS</string>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>0.5.85</string>
+	<key>FRApplianceDataSourceType</key>
+	<string>All</string>
+	<key>FRApplianceName</key>
+	<string>RetroReel3</string>
+	<key>FRAppliancePreferedOrderValue</key>
+	<integer>5</integer>
+	<key>FRHideIfNoCategories</key>
+	<false/>
+	<key>FRRemoteAppliance</key>
+	<true/>
+	<key>MinimumOSVersion</key>
+	<string>8.0</string>
+	<key>NSPrincipalClass</key>
+	<string>JellyfinAppliance</string>
+</dict>
+</plist>

@@ -1,0 +1,15 @@
+{
+  "PlaySessionId": "play1",
+  "MediaSources": [{
+    "Id": "source1", "Container": "mp4", "RunTimeTicks": 6000000000,
+    "SupportsDirectPlay": true, "SupportsDirectStream": true, "SupportsTranscoding": true,
+    "TranscodingUrl": "/jellyfin/Videos/movie1/master.m3u8?api_key=SECRET&VideoCodec=h264&AudioCodec=aac",
+    "MediaStreams": [
+      {"Type": "Video", "Index": 0, "Codec": "h264", "Width": 1920, "Height": 1080, "BitDepth": 8, "RealFrameRate": 30, "Level": 40, "VideoRange": "SDR"},
+      {"Type": "Audio", "Index": 1, "Codec": "aac", "Channels": 2, "SampleRate": 48000},
+      {"Type": "Subtitle", "Index": 2, "Codec": "subrip", "IsExternal": true, "Language": "eng", "IsDefault": false, "IsForced": false},
+      {"Type": "Subtitle", "Index": 3, "Codec": "ass", "IsExternal": true},
+      {"Type": "Subtitle", "Index": 4, "Codec": "pgssub", "IsExternal": false}
+    ]
+  }]
+}
