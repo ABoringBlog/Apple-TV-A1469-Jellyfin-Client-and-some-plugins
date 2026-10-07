@@ -1,6 +1,6 @@
 # Apple TV 3 Modernization
 
-[← Bilingual README](README.md) · [Clock English README](Clock/README_EN.md) · [Weather English README](Weather/README_EN.md)
+[← Bilingual README](README.md) · [Clock English README](Clock/README_EN.md) · [Weather English README](Weather/README_EN.md) · [Radio English README](Radio/README_EN.md)
 
 Independent open-source applications for **jailbroken Apple TV 3 (A1469 / AppleTV3,2)**.
 
@@ -13,8 +13,11 @@ Each application is independently installable, has its own package ID and releas
 | **RetroReel3** | Independent, unofficial native Jellyfin client | [v0.5.85-brand1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/v0.5.85-brand1) |
 | **Clock** | Native standalone Apple TV 3 clock | [clock-v0.1.5](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/clock-v0.1.5) |
 | **Weather** | Native weather in English or Chinese; requires Mac ATV3Bridge 24/7 | [weather-v1.0.0-public1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public1) |
+| **Radio** | Native Internet Radio in English or Chinese; requires Mac ATV3Bridge Radio | [radio-v0.3.1-public1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/radio-v0.3.1-public1) |
 
 > **Weather runtime requirement:** the current Weather app requires a Mac running ATV3Bridge continuously (24/7) for fresh live data.
+
+> **Radio runtime requirement:** the current Radio app requires a Mac running ATV3Bridge Radio continuously for station directory, search, favorites, and recent-history data.
 
 ## RetroReel3
 

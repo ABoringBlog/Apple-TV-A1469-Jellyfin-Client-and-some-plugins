@@ -1,0 +1,10 @@
+/build/
+*.o
+*.d
+*.deb
+*.pyc
+__pycache__/
+.DS_Store
+Bridge/radio_state.json
+Bridge/radio_state.json.tmp
+Bridge/radio_server.log
