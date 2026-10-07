@@ -1,5 +1,7 @@
 # Clock for Apple TV 3 / Apple TV 3 原生时钟
 
+[English-only README](README_EN.md)
+
 ![Clock appliance icon](Clock.frappliance/AppIcon.png)
 
 An independently installable native clock appliance for a **jailbroken Apple TV 3 (A1469 / AppleTV3,2)**. Built for Apple TV Software **7.9 / 12H1006** with BackRow, not AirPlay, a webpage or tvOS.

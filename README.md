@@ -1,5 +1,7 @@
 # Apple TV 3 Modernization
 
+[English-only README](README_EN.md)
+
 Independent open-source applications for **jailbroken Apple TV 3 (A1469 / AppleTV3,2)**. Each app is independently installable, has its own version and release, and shares the same voluntary [GitHub Sponsors](https://github.com/sponsors/ABoringBlog) entry point.
 
 面向已越狱 Apple TV 3 的独立开源应用集合。各应用分别构建、安装与发布，共享自愿赞助入口。
