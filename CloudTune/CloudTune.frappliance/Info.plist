@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key><string>CloudTune</string>
+    <key>CFBundleExecutable</key><string>CloudTune</string>
+    <key>CFBundleIdentifier</key><string>org.atv3.cloudtune</string>
+    <key>CFBundleName</key><string>CloudTune</string>
+    <key>CFBundlePackageType</key><string>BNDL</string>
+    <key>CFBundleShortVersionString</key><string>1.0.0</string>
+    <key>CFBundleVersion</key><string>1.0.0</string>
+    <key>FRApplianceIcon</key><string>AppIcon.png</string>
+    <key>FRApplianceIdentifier</key><string>cloudtune</string>
+    <key>FRApplianceName</key><string>CloudTune</string>
+    <key>MinimumOSVersion</key><string>8.0</string>
+</dict>
+</plist>

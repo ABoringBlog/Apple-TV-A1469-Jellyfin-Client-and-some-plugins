@@ -16,12 +16,15 @@ Independent open-source applications for **jailbroken Apple TV 3 (A1469 / AppleT
 | **[Clock](Clock/)** | Native standalone clock / 原生独立时钟 | [clock-v0.1.5](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/clock-v0.1.5) |
 | **[Weather](Weather/)** | Native weather, English + 中文; requires Mac ATV3Bridge 24/7 / 原生天气，依赖 Mac 24 小时桥接 | [weather-v1.0.0-public2](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public2) |
 | **[Radio](Radio/)** | Native Internet Radio, English + 中文; requires Mac ATV3Bridge Radio / 原生网络电台，依赖 Mac Bridge | [radio-v0.3.1-public2](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/radio-v0.3.1-public2) |
+| **[CloudTune / 云律音乐](CloudTune/)** | Independent music client, English + 中文; requires Mac CloudTune Bridge / 独立音乐客户端，依赖 Mac Bridge | [cloudtune-v1.0.0-public1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/cloudtune-v1.0.0-public1) |
 
 **All apps are free and do not require sponsorship. / 所有应用免费，赞助完全自愿。**
 
 > **Weather architecture note / Weather 架构说明：** the current Weather app requires a Mac running ATV3Bridge continuously (24/7) for fresh live data. / 当前 Weather 需要一台 Mac 24 小时运行 ATV3Bridge 才能持续获取实时天气。
 
 > **Radio architecture note / Radio 架构说明：** the current Radio app requires a Mac running ATV3Bridge Radio continuously for directory/search/favorites/recent data. / 当前 Radio 需要一台 Mac 持续运行 ATV3Bridge Radio 才能正常浏览、搜索、收藏和读取最近播放。
+
+> **CloudTune architecture note / 云律音乐架构说明：** CloudTune v1 requires a Mac running CloudTune Bridge continuously and a compatible local upstream API. The public name/icon were intentionally invented with ChatGPT at the user's request instead of using official branding. / CloudTune v1 需要 Mac 持续运行 CloudTune Bridge 和兼容的本地 API；公开名称和图标由用户要求 ChatGPT 临时创作，用来替代官方品牌视觉。
 
 ---
 

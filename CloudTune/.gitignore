@@ -1,0 +1,16 @@
+/build/
+*.o
+*.d
+*.deb
+*.pyc
+__pycache__/
+.DS_Store
+Bridge/cloudtune_bridge.log
+Bridge/*.tmp
+Bridge/session.json
+Bridge/library-cache/
+*.tar.gz
+*.tgz
+*.before-*
+*.backup*
+community-api/
