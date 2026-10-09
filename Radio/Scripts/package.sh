@@ -15,7 +15,7 @@ cd "$repo"
 [ -f "$bundle/InternetRadio" ] && [ -f "$bundle/Info.plist" ]
 package=org.atv3.internetradio
 base_version=0.3.1
-version="$base_version-public1-$lang"
+version="$base_version-public2-$lang"
 arch=iphoneos-arm
 if [ "$lang" = en ]; then display="Internet Radio for Apple TV 3 (English)"; else display="Internet Radio for Apple TV 3 (Chinese)"; fi
 mkdir -p "$out/stage/DEBIAN" "$out/stage/Applications/AppleTV.app/Appliances"

@@ -31,6 +31,10 @@ ATV3Bridge is therefore required for normal browsing and station selection in th
 - English and Chinese UI builds
 - Favorites and recent history persisted by the Mac bridge
 
+## public2 performance update
+
+public2 carries the latest physical-device optimization: the dynamic Radio frame is encoded as JPEG instead of PNG, and the previous 0.75-second delayed refresh on entry has been replaced by an immediate frame update. This reduces both entry latency and perceived remote-control delay.
+
 ## Verified status
 
 Target environment:
@@ -54,12 +58,12 @@ The public English and Chinese packages are rebuilt from the same sanitized fina
 
 Release:
 
-https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/radio-v0.3.1-public1
+https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/radio-v0.3.1-public2
 
 Choose one package:
 
-- `org.atv3.internetradio_0.3.1-public1-en_iphoneos-arm.deb` — English
-- `org.atv3.internetradio_0.3.1-public1-zh_iphoneos-arm.deb` — Chinese
+- `org.atv3.internetradio_0.3.1-public2-en_iphoneos-arm.deb` — English
+- `org.atv3.internetradio_0.3.1-public2-zh_iphoneos-arm.deb` — Chinese
 
 Both use package ID `org.atv3.internetradio`, so they are alternatives and cannot be installed side by side.
 
@@ -109,8 +113,8 @@ Replace `MAC_LAN_IP` with the Mac's address. A DHCP reservation or static LAN IP
 English example:
 
 ```sh
-scp org.atv3.internetradio_0.3.1-public1-en_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
-ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.internetradio_0.3.1-public1-en_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
+scp org.atv3.internetradio_0.3.1-public2-en_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
+ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.internetradio_0.3.1-public2-en_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
 ```
 
 Use the `-zh` package for Chinese.

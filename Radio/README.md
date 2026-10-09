@@ -31,6 +31,10 @@
 - 中文与英文 UI
 - Mac bridge 持久保存收藏和最近播放状态
 
+## public2 性能优化
+
+本次 public2 同步了最新真机优化：Radio 的动态界面位图从 PNG 改为 JPEG，并取消进入页面后的 0.75 秒延迟刷新，改为激活后立即生成并显示当前帧，从而降低进入 Radio 和遥控操作时的等待。
+
 ## 已验证状态
 
 目标环境：
@@ -54,12 +58,12 @@
 
 Release：
 
-https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/radio-v0.3.1-public1
+https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/radio-v0.3.1-public2
 
 请选择一个版本：
 
-- `org.atv3.internetradio_0.3.1-public1-zh_iphoneos-arm.deb` — 中文
-- `org.atv3.internetradio_0.3.1-public1-en_iphoneos-arm.deb` — English
+- `org.atv3.internetradio_0.3.1-public2-zh_iphoneos-arm.deb` — 中文
+- `org.atv3.internetradio_0.3.1-public2-en_iphoneos-arm.deb` — English
 
 两个版本使用相同的包 ID `org.atv3.internetradio`，**只能二选一安装**。
 
@@ -111,11 +115,11 @@ echo 'http://MAC_LAN_IP:8100' > /var/root/.atv3-radio-bridge-url
 中文示例：
 
 ```sh
-scp org.atv3.internetradio_0.3.1-public1-zh_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
-ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.internetradio_0.3.1-public1-zh_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
+scp org.atv3.internetradio_0.3.1-public2-zh_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
+ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.internetradio_0.3.1-public2-zh_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
 ```
 
-英文版把文件名换成 `...public1-en...deb`。
+英文版把文件名换成 `...public2-en...deb`。
 
 如果此前是手工部署的 Radio，请先备份：
 

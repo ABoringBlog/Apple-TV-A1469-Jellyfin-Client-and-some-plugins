@@ -100,24 +100,21 @@ static NSString *WeatherBridgeURLString(void)
     value = [value stringByTrimmingCharactersInSet:
         [NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if (![value length]) return nil;
-
     NSURL *url = [NSURL URLWithString:value];
     NSString *scheme = [[url scheme] lowercaseString];
     if (!url || ![url host] ||
-        !([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"])) {
-        return nil;
-    }
+        !([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"])) return nil;
     return value;
 }
 
 static NSDictionary *WeatherBridgeData(void)
 {
-    NSString *endpoint = WeatherBridgeURLString();
+    NSString *endpoint=WeatherBridgeURLString();
     if (![endpoint length]) return nil;
-    NSURL *url = [NSURL URLWithString:endpoint];
-    NSData *data = [NSData dataWithContentsOfURL:url];
+    NSURL *url=[NSURL URLWithString:endpoint];
+    NSData *data=[NSData dataWithContentsOfURL:url];
     if (![data length]) return nil;
-    id obj = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+    id obj=[NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
     return [obj isKindOfClass:[NSDictionary class]] ? obj : nil;
 }
 
@@ -199,9 +196,7 @@ static NSString *WeatherCurrentDate(void)
     NSNumber *feels = [w objectForKey:@"feels_like_c"];
     NSNumber *humidity = [w objectForKey:@"humidity"];
     NSNumber *wind = [w objectForKey:@"wind_kmh"];
-    if (WEATHER_LANG_EN)
-        return [NSString stringWithFormat:@"%@   Feels %.0f C   Humidity %.0f%%   Wind %.0f km/h", location, [feels doubleValue], [humidity doubleValue], [wind doubleValue]];
-    return [NSString stringWithFormat:@"%@   体感 %.0f C   湿度 %.0f%%   风速 %.0f km/h", location, [feels doubleValue], [humidity doubleValue], [wind doubleValue]];
+    return WEATHER_LANG_EN ? [NSString stringWithFormat:@"%@   Feels %.0f C   Humidity %.0f%%   Wind %.0f km/h", location, [feels doubleValue], [humidity doubleValue], [wind doubleValue]] : [NSString stringWithFormat:@"%@   体感 %.0f C   湿度 %.0f%%   风速 %.0f km/h", location, [feels doubleValue], [humidity doubleValue], [wind doubleValue]];
 }
 
 static NSString *WeatherHourLabel(NSString *iso)
@@ -220,8 +215,7 @@ static NSString *WeatherDayLabel(NSString *iso)
     if (m<3) { m+=12; y-=1; }
     NSInteger k=y%100, j=y/100;
     NSInteger h=(d+(13*(m+1))/5+k+k/4+j/4+5*j)%7;
-    static NSString *daysZH[]={@"周六",@"周日",@"周一",@"周二",@"周三",@"周四",@"周五"};
-    static NSString *daysEN[]={@"Sat",@"Sun",@"Mon",@"Tue",@"Wed",@"Thu",@"Fri"};
+    static NSString *daysZH[]={@"周六",@"周日",@"周一",@"周二",@"周三",@"周四",@"周五"}; static NSString *daysEN[]={@"Sat",@"Sun",@"Mon",@"Tue",@"Wed",@"Thu",@"Fri"};
     if (h<0 || h>6) return @"---";
     return WEATHER_LANG_EN ? daysEN[h] : daysZH[h];
 }
@@ -246,32 +240,37 @@ static NSString *WeatherHourlySummary(void)
 {
     NSDictionary *w=WeatherSnapshot(); NSArray *a=[w objectForKey:@"hourly"];
     if (![a isKindOfClass:[NSArray class]] || ![a count]) return @"";
-    NSString *updated=[w objectForKey:@"updated"];
-    NSUInteger start=0;
+    NSString *updated=[w objectForKey:@"updated"]; NSUInteger start=0;
     if ([updated isKindOfClass:[NSString class]] && [updated length]>=13) {
         NSString *hour=[updated substringToIndex:13];
         for (NSUInteger i=0;i<[a count];i++) { NSString *t=[[a objectAtIndex:i] objectForKey:@"time"]; if ([t hasPrefix:hour]) { start=i; break; } }
     }
-    NSMutableArray *parts=[NSMutableArray array];
-    for (NSUInteger j=0;j<5 && start+j<[a count];j++) {
-        NSDictionary *x=[a objectAtIndex:start+j]; NSNumber *t=[x objectForKey:@"temperature_2m"]; NSNumber *rain=[x objectForKey:@"precipitation_probability"];
-        NSString *m=WeatherConditionMark([x objectForKey:@"weather_code"], nil);
-        [parts addObject:[NSString stringWithFormat:@"%@ %@ %.0fC %.0f%%",WeatherHourLabel([x objectForKey:@"time"]),m,[t doubleValue],[rain doubleValue]]];
+    NSMutableArray *heads=[NSMutableArray array], *temps=[NSMutableArray array], *details=[NSMutableArray array];
+    for (NSUInteger j=0;j<6 && start+j<[a count];j++) {
+        NSDictionary *x=[a objectAtIndex:start+j];
+        NSString *label=j==0?WeatherLocalized(@"现在", @"Now"):WeatherHourLabel([x objectForKey:@"time"]);
+        NSString *cond=WeatherLocalizedCondition([[x objectForKey:@"weather_code"] integerValue]);
+        [heads addObject:[NSString stringWithFormat:@"%@ %@",label,cond]];
+        [temps addObject:[NSString stringWithFormat:@"%.0f°",[[x objectForKey:@"temperature_2m"] doubleValue]]];
+        [details addObject:[NSString stringWithFormat:WeatherLocalized(@"雨%.0f%%  风%.0f", @"Rain %.0f%%  Wind %.0f"),[[x objectForKey:@"precipitation_probability"] doubleValue],[[x objectForKey:@"wind_speed_10m"] doubleValue]]];
     }
-    return [parts componentsJoinedByString:@"     "];
+    return [NSString stringWithFormat:@"%@\n%@\n%@",[heads componentsJoinedByString:@"      "],[temps componentsJoinedByString:@"             "],[details componentsJoinedByString:@"        "]];
 }
 
 static NSString *WeatherDailySummary(void)
 {
     NSDictionary *w=WeatherSnapshot(); NSArray *a=[w objectForKey:@"daily"];
     if (![a isKindOfClass:[NSArray class]] || ![a count]) return @"";
-    NSMutableArray *parts=[NSMutableArray array];
-    for (NSUInteger i=0;i<5 && i<[a count];i++) {
-        NSDictionary *x=[a objectAtIndex:i]; NSNumber *hi=[x objectForKey:@"temperature_2m_max"]; NSNumber *lo=[x objectForKey:@"temperature_2m_min"];
-        NSString *m=WeatherConditionMark([x objectForKey:@"weather_code"], nil);
-        [parts addObject:[NSString stringWithFormat:@"%@ %@ %.0f/%.0f",WeatherDayLabel([x objectForKey:@"time"]),m,[hi doubleValue],[lo doubleValue]]];
+    NSMutableArray *heads=[NSMutableArray array], *temps=[NSMutableArray array], *details=[NSMutableArray array];
+    for (NSUInteger i=0;i<7 && i<[a count];i++) {
+        NSDictionary *x=[a objectAtIndex:i];
+        NSString *label=i==0?WeatherLocalized(@"今天", @"Today"):WeatherDayLabel([x objectForKey:@"time"]);
+        NSString *cond=WeatherLocalizedCondition([[x objectForKey:@"weather_code"] integerValue]);
+        [heads addObject:[NSString stringWithFormat:@"%@ %@",label,cond]];
+        [temps addObject:[NSString stringWithFormat:@"%.0f°/%.0f°",[[x objectForKey:@"temperature_2m_max"] doubleValue],[[x objectForKey:@"temperature_2m_min"] doubleValue]]];
+        [details addObject:[NSString stringWithFormat:WeatherLocalized(@"雨%.0f%%", @"Rain %.0f%%"),[[x objectForKey:@"precipitation_probability_max"] doubleValue]]];
     }
-    return [parts componentsJoinedByString:@"     "];
+    return [NSString stringWithFormat:@"%@\n%@\n%@",[heads componentsJoinedByString:@"    "],[temps componentsJoinedByString:@"       "],[details componentsJoinedByString:@"          "]];
 }
 
 static void WeatherRoundedRect(CGContextRef c, CGRect r, CGFloat radius)
@@ -427,12 +426,14 @@ static NSData *WeatherRenderImage(void)
     NSString *cond=WeatherLocalizedCondition(code);
 
     WeatherText(ctx,loc,72,650,34,1.0);
+    CGContextSaveGState(ctx);
+    CGContextTranslateCTM(ctx,0.0f,2.0f*(485.0f+55.0f*1.15f));
+    CGContextScaleCTM(ctx,1.0f,-1.0f);
     WeatherIcon(ctx,code,day,70,485,1.15);
+    CGContextRestoreGState(ctx);
     WeatherText(ctx,[NSString stringWithFormat:@"%.0f C",[temp doubleValue]],235,535,92,1.0);
     WeatherText(ctx,cond,240,495,31,0.92);
-    WeatherText(ctx, WEATHER_LANG_EN
-        ? [NSString stringWithFormat:@"Feels %.0f C   Humidity %.0f%%   Wind %.0f km/h",[feels doubleValue],[hum doubleValue],[wind doubleValue]]
-        : [NSString stringWithFormat:@"体感 %.0f C   湿度 %.0f%%   风速 %.0f km/h",[feels doubleValue],[hum doubleValue],[wind doubleValue]],74,445,25,0.86);
+    WeatherText(ctx,WEATHER_LANG_EN ? [NSString stringWithFormat:@"Feels %.0f C   Humidity %.0f%%   Wind %.0f km/h",[feels doubleValue],[hum doubleValue],[wind doubleValue]] : [NSString stringWithFormat:@"体感 %.0f C   湿度 %.0f%%   风速 %.0f km/h",[feels doubleValue],[hum doubleValue],[wind doubleValue]],74,445,25,0.86);
     NSArray *daily=[w objectForKey:@"daily"];
     if ([daily count]) {
         NSDictionary *today=[daily objectAtIndex:0];
@@ -458,14 +459,16 @@ static NSData *WeatherRenderImage(void)
         NSString *label=j==0?WeatherLocalized(@"现在", @"Now"):WeatherHourLabel([x objectForKey:@"time"]);
         NSString *tempText=[NSString stringWithFormat:@"%.0f C",[[x objectForKey:@"temperature_2m"] doubleValue]];
         NSString *rainText=[NSString stringWithFormat:@"%.0f%%",[[x objectForKey:@"precipitation_probability"] doubleValue]];
-        NSString *detailText=WEATHER_LANG_EN
-            ? [NSString stringWithFormat:@"Feels %.0f° Wind %.0f",[[x objectForKey:@"apparent_temperature"] doubleValue],[[x objectForKey:@"wind_speed_10m"] doubleValue]]
-            : [NSString stringWithFormat:@"体%.0f° 风%.0f",[[x objectForKey:@"apparent_temperature"] doubleValue],[[x objectForKey:@"wind_speed_10m"] doubleValue]];
+        NSString *detailText=WEATHER_LANG_EN ? [NSString stringWithFormat:@"Feels %.0f° Wind %.0f",[[x objectForKey:@"apparent_temperature"] doubleValue],[[x objectForKey:@"wind_speed_10m"] doubleValue]] : [NSString stringWithFormat:@"体%.0f° 风%.0f",[[x objectForKey:@"apparent_temperature"] doubleValue],[[x objectForKey:@"wind_speed_10m"] doubleValue]];
         WeatherCenteredText(ctx,label,cx,350,21,1.0);
         NSInteger hcode=[[x objectForKey:@"weather_code"] integerValue];
         NSNumber *hourDay=[x objectForKey:@"is_day"];
         BOOL hday=hourDay ? [hourDay boolValue] : day;
+        CGContextSaveGState(ctx);
+        CGContextTranslateCTM(ctx,0.0f,2.0f*(285.0f+55.0f*0.48f));
+        CGContextScaleCTM(ctx,1.0f,-1.0f);
         WeatherIcon(ctx,hcode,hday,cx-WeatherIconVisualCenter(hcode,0.48f),285,0.48);
+        CGContextRestoreGState(ctx);
         WeatherCenteredText(ctx,tempText,cx,270,23,1.0);
         WeatherCenteredText(ctx,rainText,cx,252,13,0.78);
         WeatherCenteredText(ctx,detailText,cx,239,11,0.68);
@@ -502,8 +505,8 @@ static NSData *WeatherRenderImage(void)
 
     CGImageRef image=CGBitmapContextCreateImage(ctx); CGContextRelease(ctx); if(!image)return nil;
     NSMutableData *data=[NSMutableData data];
-    CGImageDestinationRef dest=CGImageDestinationCreateWithData((CFMutableDataRef)data,CFSTR("public.png"),1,NULL);
-    if(!dest){CGImageRelease(image);return nil;} CGImageDestinationAddImage(dest,image,NULL); BOOL ok=CGImageDestinationFinalize(dest); CFRelease(dest); CGImageRelease(image);
+    CGImageDestinationRef dest=CGImageDestinationCreateWithData((CFMutableDataRef)data,CFSTR("public.jpeg"),1,NULL);
+    if(!dest){CGImageRelease(image);return nil;} NSDictionary *options=@{(id)kCGImageDestinationLossyCompressionQuality:@(0.83)}; CGImageDestinationAddImage(dest,image,(CFDictionaryRef)options); BOOL ok=CGImageDestinationFinalize(dest); CFRelease(dest); CGImageRelease(image);
     return ok?data:nil;
 }
 
@@ -572,6 +575,12 @@ static id WeatherCreateImageControl(void)
 
 
 static char WeatherImageControlKey;
+static char WeatherNativeBackgroundKey;
+static char WeatherCurrentIconKey;
+static char WeatherHourlyIconsKey;
+static char WeatherDailyIconsKey;
+static char WeatherHourlyColumnsKey;
+static char WeatherDailyColumnsKey;
 
 static id WeatherMakeATVImage(void)
 {
@@ -650,19 +659,8 @@ static id WeatherCreateFullscreenControl(id host)
     Class controlClass = NSClassFromString(@"BRImageControl");
     if (!controlClass) return nil;
 
-    id image = WeatherMakeATVImage();
-    if (!image) return nil;
-
     id control = WeatherNew(controlClass);
     if (!control) return nil;
-
-    SEL setImageSel = NSSelectorFromString(@"setImage:");
-    if (!WeatherSignature(control, setImageSel, @encode(void), @[@"@"])) {
-        [control release];
-        return nil;
-    }
-
-    ((void(*)(id,SEL,id))objc_msgSend)(control, setImageSel, image);
 
     CGRect frame = CGRectZero;
     if (!WeatherBackRowBounds(host, &frame) ||
@@ -744,6 +742,10 @@ static char WeatherHourlyTextKey;
 static char WeatherDailyTextKey;
 static char WeatherHourlyLabelKey;
 static char WeatherDailyLabelKey;
+static char WeatherLocationTextKey;
+static char WeatherConditionTextKey;
+static char WeatherDetailsTextKey;
+static char WeatherSunTextKey;
 
 static id WeatherObjectCall(id target, NSString *name)
 {
@@ -848,6 +850,169 @@ static id WeatherCreateTextControl(void)
     return [WeatherNew(cls) autorelease];
 }
 
+static void WeatherInstallNativeBackground(id self)
+{
+    if (objc_getAssociatedObject(self, &WeatherNativeBackgroundKey)) return;
+    NSString *path=[[NSBundle bundleWithIdentifier:@"org.atv3.weather"] pathForResource:@"NativeBackground" ofType:@"png"];
+    NSData *data=path ? [NSData dataWithContentsOfFile:path] : nil;
+    Class imageClass=NSClassFromString(@"ATVImage");
+    Class controlClass=NSClassFromString(@"BRImageControl");
+    if (![data length] || !imageClass || !controlClass) return;
+    SEL imageSel=NSSelectorFromString(@"imageWithData:");
+    if (!WeatherSignature(imageClass,imageSel,@encode(id),@[@"@"])) return;
+    id image=((id(*)(id,SEL,id))objc_msgSend)(imageClass,imageSel,data);
+    id control=WeatherNew(controlClass);
+    if (!image || !control) { [control release]; return; }
+    SEL setImageSel=NSSelectorFromString(@"setImage:");
+    if ([control respondsToSelector:setImageSel])
+        ((void(*)(id,SEL,id))objc_msgSend)(control,setImageSel,image);
+    CGRect frame=CGRectZero;
+    if (!WeatherBackRowBounds(self,&frame) || !WeatherBackRowSetFrame(control,frame)) { [control release]; return; }
+    SEL addSel=NSSelectorFromString(@"addSubview:");
+    if ([self respondsToSelector:addSel]) ((void(*)(id,SEL,id))objc_msgSend)(self,addSel,control);
+    objc_setAssociatedObject(self,&WeatherNativeBackgroundKey,control,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [control release];
+}
+
+static NSString *WeatherSmallIconName(NSInteger code)
+{
+    if (code>=95) return @"WeatherIconStorm";
+    if ((code>=71 && code<=77) || code==85 || code==86) return @"WeatherIconSnow";
+    if (code==45 || code==48) return @"WeatherIconFog";
+    if ((code>=51 && code<=67) || (code>=80 && code<=82)) return @"WeatherIconRain";
+    if (code>=1) return @"WeatherIconCloud";
+    return @"WeatherIconSunny";
+}
+
+static void WeatherInstallCurrentIcon(id self)
+{
+    id old=objc_getAssociatedObject(self,&WeatherCurrentIconKey);
+    if (old) return;
+    NSDictionary *w=WeatherSnapshot();
+    NSInteger code=[[w objectForKey:@"weather_code"] integerValue];
+    NSString *path=[[NSBundle bundleWithIdentifier:@"org.atv3.weather"] pathForResource:WeatherSmallIconName(code) ofType:@"png"];
+    NSData *data=path ? [NSData dataWithContentsOfFile:path] : nil;
+    Class imageClass=NSClassFromString(@"ATVImage"), controlClass=NSClassFromString(@"BRImageControl");
+    if (![data length] || !imageClass || !controlClass) return;
+    SEL imageSel=NSSelectorFromString(@"imageWithData:");
+    if (!WeatherSignature(imageClass,imageSel,@encode(id),@[@"@"])) return;
+    id image=((id(*)(id,SEL,id))objc_msgSend)(imageClass,imageSel,data);
+    id control=WeatherNew(controlClass);
+    if (!image || !control) { [control release]; return; }
+    SEL setImageSel=NSSelectorFromString(@"setImage:");
+    if ([control respondsToSelector:setImageSel]) ((void(*)(id,SEL,id))objc_msgSend)(control,setImageSel,image);
+    WeatherSetFrame(control,CGRectMake(70.0f,485.0f,132.0f,132.0f));
+    SEL addSel=NSSelectorFromString(@"addSubview:");
+    if ([self respondsToSelector:addSel]) ((void(*)(id,SEL,id))objc_msgSend)(self,addSel,control);
+    objc_setAssociatedObject(self,&WeatherCurrentIconKey,control,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [control release];
+}
+
+static id WeatherSmallImageControl(NSString *name, CGRect frame)
+{
+    NSString *path=[[NSBundle bundleWithIdentifier:@"org.atv3.weather"] pathForResource:name ofType:@"png"];
+    NSData *data=path ? [NSData dataWithContentsOfFile:path] : nil;
+    Class imageClass=NSClassFromString(@"ATVImage"), controlClass=NSClassFromString(@"BRImageControl");
+    if (![data length] || !imageClass || !controlClass) return nil;
+    SEL imageSel=NSSelectorFromString(@"imageWithData:");
+    if (!WeatherSignature(imageClass,imageSel,@encode(id),@[@"@"])) return nil;
+    id image=((id(*)(id,SEL,id))objc_msgSend)(imageClass,imageSel,data);
+    id control=WeatherNew(controlClass);
+    if (!image || !control) { [control release]; return nil; }
+    SEL setImageSel=NSSelectorFromString(@"setImage:");
+    if ([control respondsToSelector:setImageSel]) ((void(*)(id,SEL,id))objc_msgSend)(control,setImageSel,image);
+    WeatherSetFrame(control,frame);
+    return [control autorelease];
+}
+
+static void WeatherInstallForecastIcons(id self)
+{
+    if (objc_getAssociatedObject(self,&WeatherHourlyIconsKey)) return;
+    NSDictionary *w=WeatherSnapshot(); NSArray *hourly=[w objectForKey:@"hourly"], *daily=[w objectForKey:@"daily"];
+    SEL addSel=NSSelectorFromString(@"addSubview:");
+    if (![self respondsToSelector:addSel]) return;
+    NSMutableArray *hs=[NSMutableArray array], *ds=[NSMutableArray array];
+    NSUInteger start=0; NSString *updated=[w objectForKey:@"updated"];
+    if ([updated isKindOfClass:[NSString class]] && [updated length]>=13) {
+        NSString *hh=[updated substringToIndex:13];
+        for(NSUInteger i=0;i<[hourly count];i++){ if([[[hourly objectAtIndex:i] objectForKey:@"time"] hasPrefix:hh]){start=i;break;} }
+    }
+    const CGFloat hleft=76.0f, hwidth=(1204.0f-76.0f)/6.0f;
+    for(NSUInteger j=0;j<6 && start+j<[hourly count];j++){
+        NSInteger code=[[[hourly objectAtIndex:start+j] objectForKey:@"weather_code"] integerValue];
+        CGFloat cx=hleft+(j+0.5f)*hwidth;
+        id c=WeatherSmallImageControl(WeatherSmallIconName(code),CGRectMake(cx-22.0f,285.0f,44.0f,44.0f));
+        if(c){((void(*)(id,SEL,id))objc_msgSend)(self,addSel,c);[hs addObject:c];}
+    }
+    const CGFloat dleft=72.0f, dwidth=(1208.0f-72.0f)/7.0f;
+    for(NSUInteger i=0;i<7 && i<[daily count];i++){
+        NSInteger code=[[[daily objectAtIndex:i] objectForKey:@"weather_code"] integerValue];
+        CGFloat cx=dleft+(i+0.5f)*dwidth;
+        id c=WeatherSmallImageControl(WeatherSmallIconName(code),CGRectMake(cx-20.0f,92.0f,40.0f,40.0f));
+        if(c){((void(*)(id,SEL,id))objc_msgSend)(self,addSel,c);[ds addObject:c];}
+    }
+    objc_setAssociatedObject(self,&WeatherHourlyIconsKey,hs,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self,&WeatherDailyIconsKey,ds,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+static id WeatherColumnText(CGRect frame)
+{
+    id c=WeatherCreateTextControl();
+    if (c) WeatherSetFrame(c,frame);
+    return c;
+}
+static void WeatherInstallForecastColumns(id self)
+{
+    if (objc_getAssociatedObject(self,&WeatherHourlyColumnsKey)) return;
+    SEL addSel=NSSelectorFromString(@"addSubview:");
+    if (![self respondsToSelector:addSel]) return;
+    NSMutableArray *hs=[NSMutableArray array], *ds=[NSMutableArray array];
+    CGFloat hw=(1204.0f-76.0f)/6.0f;
+    for(NSUInteger i=0;i<6;i++){
+        id c=WeatherColumnText(CGRectMake(76.0f+i*hw,239.0f,hw,112.0f));
+        if(c){((void(*)(id,SEL,id))objc_msgSend)(self,addSel,c);[hs addObject:c];}
+    }
+    CGFloat dw=(1208.0f-72.0f)/7.0f;
+    for(NSUInteger i=0;i<7;i++){
+        id c=WeatherColumnText(CGRectMake(72.0f+i*dw,42.0f,dw,120.0f));
+        if(c){((void(*)(id,SEL,id))objc_msgSend)(self,addSel,c);[ds addObject:c];}
+    }
+    objc_setAssociatedObject(self,&WeatherHourlyColumnsKey,hs,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self,&WeatherDailyColumnsKey,ds,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+static void WeatherUpdateForecastColumns(id self)
+{
+    WeatherInstallForecastColumns(self);
+    NSArray *hs=objc_getAssociatedObject(self,&WeatherHourlyColumnsKey), *ds=objc_getAssociatedObject(self,&WeatherDailyColumnsKey);
+    NSDictionary *w=WeatherSnapshot(); NSArray *hourly=[w objectForKey:@"hourly"], *daily=[w objectForKey:@"daily"];
+    NSDictionary *base=WeatherThemeTextAttributes();
+    NSMutableDictionary *attrs=[NSMutableDictionary dictionaryWithDictionary:base ?: @{}];
+    [attrs setObject:@16 forKey:@"BRFontPointSize"]; [attrs setObject:@1 forKey:@"BRTextAlignmentKey"];
+    NSUInteger start=0; NSString *updated=[w objectForKey:@"updated"];
+    if([updated isKindOfClass:[NSString class]] && [updated length]>=13){
+        NSString *hh=[updated substringToIndex:13];
+        for(NSUInteger i=0;i<[hourly count];i++) if([[[hourly objectAtIndex:i] objectForKey:@"time"] hasPrefix:hh]){start=i;break;}
+    }
+    for(NSUInteger j=0;j<[hs count];j++){
+        NSString *txt=@"";
+        if(start+j<[hourly count]){
+            NSDictionary *x=[hourly objectAtIndex:start+j];
+            txt=[NSString stringWithFormat:WeatherLocalized(@"%@\n%.0f°\n雨 %.0f%%", @"%@\n%.0f°\nRain %.0f%%"),j==0?WeatherLocalized(@"现在", @"Now"):WeatherHourLabel([x objectForKey:@"time"]),[[x objectForKey:@"temperature_2m"] doubleValue],[[x objectForKey:@"precipitation_probability"] doubleValue]];
+        }
+        id c=[hs objectAtIndex:j]; WeatherSetText(c,txt,attrs);
+        SEL m=NSSelectorFromString(@"setMaxSize:"); if([c respondsToSelector:m])((void(*)(id,SEL,CGSize))objc_msgSend)(c,m,CGSizeMake(180,100));
+    }
+    for(NSUInteger i=0;i<[ds count];i++){
+        NSString *txt=@"";
+        if(i<[daily count]){
+            NSDictionary *x=[daily objectAtIndex:i];
+            txt=[NSString stringWithFormat:WeatherLocalized(@"%@\n%.0f°/%.0f°\n雨 %.0f%%", @"%@\n%.0f°/%.0f°\nRain %.0f%%"),i==0?WeatherLocalized(@"今天", @"Today"):WeatherDayLabel([x objectForKey:@"time"]),[[x objectForKey:@"temperature_2m_max"] doubleValue],[[x objectForKey:@"temperature_2m_min"] doubleValue],[[x objectForKey:@"precipitation_probability_max"] doubleValue]];
+        }
+        id c=[ds objectAtIndex:i]; WeatherSetText(c,txt,attrs);
+        SEL m=NSSelectorFromString(@"setMaxSize:"); if([c respondsToSelector:m])((void(*)(id,SEL,CGSize))objc_msgSend)(c,m,CGSizeMake(155,110));
+    }
+}
+
 static void WeatherInstallTextControls(id self)
 {
     id timeControl =
@@ -864,8 +1029,12 @@ static void WeatherInstallTextControls(id self)
     id dailyControl = WeatherCreateTextControl();
     id hourlyLabel = WeatherCreateTextControl();
     id dailyLabel = WeatherCreateTextControl();
+    id locationControl = WeatherCreateTextControl();
+    id conditionControl = WeatherCreateTextControl();
+    id detailsControl = WeatherCreateTextControl();
+    id sunControl = WeatherCreateTextControl();
 
-    if (!timeControl || !dateControl || !hourlyControl || !dailyControl || !hourlyLabel || !dailyLabel)
+    if (!timeControl || !dateControl || !hourlyControl || !dailyControl || !hourlyLabel || !dailyLabel || !locationControl || !conditionControl || !detailsControl || !sunControl)
         return;
 
     /*
@@ -874,24 +1043,16 @@ static void WeatherInstallTextControls(id self)
      * we'll replace these temporary frames with
      * measured final weather geometry.
      */
-    WeatherSetFrame(
-        timeControl,
-        CGRectMake(190.0f,
-                   440.0f,
-                   900.0f,
-                   180.0f));
-
-    WeatherSetFrame(
-        dateControl,
-        CGRectMake(190.0f,
-                   365.0f,
-                   900.0f,
-                   60.0f));
-
-    WeatherSetFrame(hourlyLabel, CGRectMake(190.0f, 320.0f, 900.0f, 30.0f));
-    WeatherSetFrame(hourlyControl, CGRectMake(190.0f, 275.0f, 900.0f, 48.0f));
-    WeatherSetFrame(dailyLabel, CGRectMake(190.0f, 225.0f, 900.0f, 30.0f));
-    WeatherSetFrame(dailyControl, CGRectMake(190.0f, 180.0f, 900.0f, 48.0f));
+    WeatherSetFrame(locationControl, CGRectMake(72.0f, 642.0f, 1136.0f, 45.0f));
+    WeatherSetFrame(timeControl, CGRectMake(235.0f, 525.0f, 500.0f, 105.0f));
+    WeatherSetFrame(conditionControl, CGRectMake(240.0f, 486.0f, 500.0f, 42.0f));
+    WeatherSetFrame(detailsControl, CGRectMake(74.0f, 438.0f, 680.0f, 36.0f));
+    WeatherSetFrame(sunControl, CGRectMake(760.0f, 438.0f, 440.0f, 34.0f));
+    WeatherSetFrame(dateControl, CGRectMake(0.0f, 0.0f, 1.0f, 1.0f));
+    WeatherSetFrame(hourlyLabel, CGRectMake(82.0f, 382.0f, 1136.0f, 28.0f));
+    WeatherSetFrame(hourlyControl, CGRectMake(0.0f, 0.0f, 1.0f, 1.0f));
+    WeatherSetFrame(dailyLabel, CGRectMake(82.0f, 192.0f, 1136.0f, 28.0f));
+    WeatherSetFrame(dailyControl, CGRectMake(0.0f, 0.0f, 1.0f, 1.0f));
 
     SEL addSubviewSel =
         NSSelectorFromString(@"addSubview:");
@@ -913,6 +1074,10 @@ static void WeatherInstallTextControls(id self)
     ((void(*)(id,SEL,id))objc_msgSend)(self, addSubviewSel, hourlyControl);
     ((void(*)(id,SEL,id))objc_msgSend)(self, addSubviewSel, dailyLabel);
     ((void(*)(id,SEL,id))objc_msgSend)(self, addSubviewSel, dailyControl);
+    ((void(*)(id,SEL,id))objc_msgSend)(self, addSubviewSel, locationControl);
+    ((void(*)(id,SEL,id))objc_msgSend)(self, addSubviewSel, conditionControl);
+    ((void(*)(id,SEL,id))objc_msgSend)(self, addSubviewSel, detailsControl);
+    ((void(*)(id,SEL,id))objc_msgSend)(self, addSubviewSel, sunControl);
 
     objc_setAssociatedObject(
         self,
@@ -930,6 +1095,10 @@ static void WeatherInstallTextControls(id self)
     objc_setAssociatedObject(self, &WeatherHourlyTextKey, hourlyControl, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(self, &WeatherDailyLabelKey, dailyLabel, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(self, &WeatherDailyTextKey, dailyControl, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, &WeatherLocationTextKey, locationControl, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, &WeatherConditionTextKey, conditionControl, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, &WeatherDetailsTextKey, detailsControl, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, &WeatherSunTextKey, sunControl, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 static void WeatherUpdateTextControls(id self)
@@ -950,8 +1119,12 @@ static void WeatherUpdateTextControls(id self)
     id hourlyControl = objc_getAssociatedObject(self, &WeatherHourlyTextKey);
     id dailyLabel = objc_getAssociatedObject(self, &WeatherDailyLabelKey);
     id dailyControl = objc_getAssociatedObject(self, &WeatherDailyTextKey);
+    id locationControl=objc_getAssociatedObject(self,&WeatherLocationTextKey);
+    id conditionControl=objc_getAssociatedObject(self,&WeatherConditionTextKey);
+    id detailsControl=objc_getAssociatedObject(self,&WeatherDetailsTextKey);
+    id sunControl=objc_getAssociatedObject(self,&WeatherSunTextKey);
 
-    if (!timeControl || !dateControl || !hourlyLabel || !hourlyControl || !dailyLabel || !dailyControl)
+    if (!timeControl || !dateControl || !hourlyLabel || !hourlyControl || !dailyLabel || !dailyControl || !locationControl || !conditionControl || !detailsControl || !sunControl)
         return;
 
     NSDictionary *baseAttrs =
@@ -965,17 +1138,17 @@ static void WeatherUpdateTextControls(id self)
         [NSMutableDictionary dictionaryWithDictionary:
             baseAttrs ?: @{}];
 
-    [timeAttrs setObject:@82
+    [timeAttrs setObject:@92
                   forKey:@"BRFontPointSize"];
 
-    [dateAttrs setObject:@30
+    [dateAttrs setObject:@25
                   forKey:@"BRFontPointSize"];
 
     NSMutableDictionary *forecastAttrs=[NSMutableDictionary dictionaryWithDictionary:baseAttrs ?: @{}];
-    [forecastAttrs setObject:@24 forKey:@"BRFontPointSize"];
+    [forecastAttrs setObject:@18 forKey:@"BRFontPointSize"];
     [forecastAttrs setObject:@1 forKey:@"BRTextAlignmentKey"];
     NSMutableDictionary *labelAttrs=[NSMutableDictionary dictionaryWithDictionary:baseAttrs ?: @{}];
-    [labelAttrs setObject:@19 forKey:@"BRFontPointSize"];
+    [labelAttrs setObject:@18 forKey:@"BRFontPointSize"];
     [labelAttrs setObject:@1 forKey:@"BRTextAlignmentKey"];
 
     /*
@@ -988,20 +1161,35 @@ static void WeatherUpdateTextControls(id self)
     [dateAttrs setObject:@1
                   forKey:@"BRTextAlignmentKey"];
 
-    WeatherSetText(
-        timeControl,
-        WeatherCurrentTime(),
-        timeAttrs);
-
-    WeatherSetText(
-        dateControl,
-        WeatherCurrentDate(),
-        dateAttrs);
+    NSDictionary *snap=WeatherSnapshot();
+    NSString *location=[snap objectForKey:@"location"] ?: @"Weather";
+    NSNumber *temp=[snap objectForKey:@"temperature_c"];
+    NSNumber *feels=[snap objectForKey:@"feels_like_c"];
+    NSNumber *humidity=[snap objectForKey:@"humidity"];
+    NSNumber *wind=[snap objectForKey:@"wind_kmh"];
+    NSString *condition=WeatherLocalizedCondition([[snap objectForKey:@"weather_code"] integerValue]);
+    NSArray *days=[snap objectForKey:@"daily"]; NSString *rise=@"--:--", *set=@"--:--";
+    if([days count]){
+        NSString *r=[[days objectAtIndex:0] objectForKey:@"sunrise"], *ss=[[days objectAtIndex:0] objectForKey:@"sunset"];
+        if([r length]>=16) rise=[r substringWithRange:NSMakeRange(11,5)];
+        if([ss length]>=16) set=[ss substringWithRange:NSMakeRange(11,5)];
+    }
+    NSMutableDictionary *locAttrs=[NSMutableDictionary dictionaryWithDictionary:baseAttrs ?: @{}]; [locAttrs setObject:@34 forKey:@"BRFontPointSize"];
+    NSMutableDictionary *condAttrs=[NSMutableDictionary dictionaryWithDictionary:baseAttrs ?: @{}]; [condAttrs setObject:@31 forKey:@"BRFontPointSize"];
+    NSMutableDictionary *detailAttrs=[NSMutableDictionary dictionaryWithDictionary:baseAttrs ?: @{}]; [detailAttrs setObject:@25 forKey:@"BRFontPointSize"];
+    NSMutableDictionary *sunAttrs=[NSMutableDictionary dictionaryWithDictionary:baseAttrs ?: @{}]; [sunAttrs setObject:@22 forKey:@"BRFontPointSize"];
+    WeatherSetText(locationControl,location,locAttrs);
+    WeatherSetText(timeControl,[NSString stringWithFormat:@"%.0f C",[temp doubleValue]],timeAttrs);
+    WeatherSetText(conditionControl,condition,condAttrs);
+    WeatherSetText(detailsControl,WEATHER_LANG_EN ? [NSString stringWithFormat:@"Feels %.0f C   Humidity %.0f%%   Wind %.0f km/h",[feels doubleValue],[humidity doubleValue],[wind doubleValue]] : [NSString stringWithFormat:@"体感 %.0f C   湿度 %.0f%%   风速 %.0f km/h",[feels doubleValue],[humidity doubleValue],[wind doubleValue]],detailAttrs);
+    WeatherSetText(sunControl,[NSString stringWithFormat:WeatherLocalized(@"日出 %@   日落 %@", @"Sunrise %@   Sunset %@"),rise,set],sunAttrs);
+    WeatherSetText(dateControl,@"",dateAttrs);
 
     WeatherSetText(hourlyLabel, WeatherLocalized(@"每小时天气", @"Hourly Forecast"), labelAttrs);
-    WeatherSetText(hourlyControl, WeatherHourlySummary(), forecastAttrs);
+    WeatherSetText(hourlyControl, @"", forecastAttrs);
     WeatherSetText(dailyLabel, WeatherLocalized(@"7天天气预报", @"7-Day Forecast"), labelAttrs);
-    WeatherSetText(dailyControl, WeatherDailySummary(), forecastAttrs);
+    WeatherSetText(dailyControl, @"", forecastAttrs);
+    WeatherUpdateForecastColumns(self);
 
     /*
      * BRTextControl owns part of its BackRow layout.
@@ -1015,18 +1203,18 @@ static void WeatherUpdateTextControls(id self)
         ((void(*)(id,SEL,CGSize))objc_msgSend)(
             timeControl,
             maxSizeSel,
-            CGSizeMake(900.0f, 180.0f));
+            CGSizeMake(1136.0f, 120.0f));
     }
 
     if ([dateControl respondsToSelector:maxSizeSel]) {
         ((void(*)(id,SEL,CGSize))objc_msgSend)(
             dateControl,
             maxSizeSel,
-            CGSizeMake(900.0f, 60.0f));
+            CGSizeMake(1136.0f, 55.0f));
     }
 
-    if ([hourlyControl respondsToSelector:maxSizeSel]) ((void(*)(id,SEL,CGSize))objc_msgSend)(hourlyControl,maxSizeSel,CGSizeMake(900.0f,55.0f));
-    if ([dailyControl respondsToSelector:maxSizeSel]) ((void(*)(id,SEL,CGSize))objc_msgSend)(dailyControl,maxSizeSel,CGSizeMake(900.0f,55.0f));
+    if ([hourlyControl respondsToSelector:maxSizeSel]) ((void(*)(id,SEL,CGSize))objc_msgSend)(hourlyControl,maxSizeSel,CGSizeMake(1136.0f,105.0f));
+    if ([dailyControl respondsToSelector:maxSizeSel]) ((void(*)(id,SEL,CGSize))objc_msgSend)(dailyControl,maxSizeSel,CGSizeMake(1136.0f,105.0f));
 
     SEL verticalSel =
         NSSelectorFromString(@"setVerticallyCenterAdjustedText:");
@@ -1051,7 +1239,6 @@ static void WeatherRefresh(id self, SEL cmd)
     (void)cmd;
 
     WeatherUpdateFullscreenControl(self);
-    WeatherUpdateTextControls(self);
 
     NSString *time = WeatherCurrentTime();
     NSString *date = WeatherCurrentDate();
@@ -1112,7 +1299,7 @@ static void WeatherTimerFire(id self, SEL cmd, id timer)
     (void)cmd;
     (void)timer;
 
-    WeatherRefresh(self, NULL);
+    WeatherUpdateTextControls(self);
     NSTimeInterval now=[NSDate timeIntervalSinceReferenceDate];
     if (!WeatherSnapshot() || (now-weatherCachedAt)>=45.0) WeatherFetchAsync(self);
 }
@@ -1131,7 +1318,7 @@ static void WeatherBackgroundFetch(id self, SEL cmd, id unused)
 static void WeatherApplyFreshData(id self, SEL cmd)
 {
     (void)cmd;
-    WeatherRefresh(self,NULL);
+    NSLog(@"Weather: data updated; bitmap refresh deferred to next open");
 }
 
 static void WeatherEnsureTimerSelector(void);
@@ -1152,10 +1339,7 @@ static id WeatherControllerInit(id self, SEL cmd)
     if (!self)
         return nil;
 
-    WeatherRefresh(self, NULL);
-
     WeatherEnsureTimerSelector();
-    WeatherFetchAsync(self);
 
     NSTimer *timer =
         [NSTimer scheduledTimerWithTimeInterval:60.0
@@ -1176,15 +1360,10 @@ static id WeatherControllerInit(id self, SEL cmd)
 
 static void WeatherActivated(id self, SEL cmd)
 {
-    IMP superIMP = WeatherControllerSuper(cmd);
-
-    if (superIMP)
-        ((void(*)(id,SEL))superIMP)(self, cmd);
-
-    WeatherRefresh(self, NULL);
-    WeatherFetchAsync(self);
-
-    NSLog(@"Weather: activated");
+    IMP superIMP=WeatherControllerSuper(cmd);
+    if(superIMP) ((void(*)(id,SEL))superIMP)(self,cmd);
+    WeatherUpdateFullscreenControl(self);
+    NSLog(@"Weather: restored bitmap layout");
 }
 
 static void WeatherDeactivated(id self, SEL cmd)

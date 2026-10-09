@@ -15,7 +15,7 @@ def arc(name):
 with arc("control.tar.gz") as t:
     control=t.extractfile("control").read().decode()
     assert "Package: org.atv3.internetradio\n" in control
-    assert f"Version: 0.3.1-public1-{lang}\n" in control
+    assert f"Version: 0.3.1-public2-{lang}\n" in control
     assert "Architecture: iphoneos-arm\n" in control
     assert "requires ATV3Bridge running continuously on a Mac" in control
 
@@ -34,6 +34,8 @@ with arc("data.tar.gz") as t:
     assert b"192.168." not in binary
     assert b"/var/root/.atv3-radio-bridge-url" in binary
     assert b"/v1/radio/stations?" in binary
+    assert b"public.jpeg" in binary
+    assert b"activated immediate frame" in binary
     info=plistlib.loads(t.extractfile(m[p+"Info.plist"]).read())
     assert info["CFBundleIdentifier"]=="org.atv3.internetradio"
     assert info["CFBundleVersion"]=="0.3.1"

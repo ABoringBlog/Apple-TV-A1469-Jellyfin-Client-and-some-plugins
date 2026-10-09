@@ -48,6 +48,13 @@ weather: $(OBJECTS)
 	cp Weather.frappliance/AppIcon@1080.png $(BUILD)/Weather.frappliance/
 	cp Weather.frappliance/TopRowIcon.png $(BUILD)/Weather.frappliance/
 	cp Weather.frappliance/TopRowIcon@1080.png $(BUILD)/Weather.frappliance/
+	cp Weather.frappliance/NativeBackground.png $(BUILD)/Weather.frappliance/
+	cp Weather.frappliance/WeatherIconSunny.png $(BUILD)/Weather.frappliance/
+	cp Weather.frappliance/WeatherIconCloud.png $(BUILD)/Weather.frappliance/
+	cp Weather.frappliance/WeatherIconRain.png $(BUILD)/Weather.frappliance/
+	cp Weather.frappliance/WeatherIconSnow.png $(BUILD)/Weather.frappliance/
+	cp Weather.frappliance/WeatherIconFog.png $(BUILD)/Weather.frappliance/
+	cp Weather.frappliance/WeatherIconStorm.png $(BUILD)/Weather.frappliance/
 	cp -R Weather.frappliance/English.lproj $(BUILD)/Weather.frappliance/
 	$(CLANG) $(ARMFLAGS) \
 		-bundle \

@@ -25,10 +25,8 @@ static NSString *RadioBridgeBaseURLString(void)
                                                  error:NULL];
     if (![value isKindOfClass:[NSString class]]) return nil;
     value=[value stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    while ([value hasSuffix:@"/"] && [value length]>0)
-        value=[value substringToIndex:[value length]-1];
+    while ([value hasSuffix:@"/"] && [value length]>0) value=[value substringToIndex:[value length]-1];
     if (![value length]) return nil;
-
     NSURL *url=[NSURL URLWithString:value];
     NSString *scheme=[[url scheme] lowercaseString];
     if (!url || ![url host] ||
@@ -446,6 +444,7 @@ static NSString *RadioDisplayPage(NSString *page) {
 }
 static NSData *RadioRenderImage(void)
 {
+    NSTimeInterval started=[NSDate timeIntervalSinceReferenceDate];
     const size_t width=1280,height=720;
     CGColorSpaceRef cs=CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx=CGBitmapContextCreate(NULL,width,height,8,width*4,cs,kCGImageAlphaPremultipliedLast|kCGBitmapByteOrder32Big);
@@ -487,8 +486,10 @@ static NSData *RadioRenderImage(void)
     if (status.length && ![status isEqual:RadioL(@"加载完成", @"Loaded")])RadioText(ctx,status,710,98,20,0.95);
     [page release];[status release];[playing release];[rows release];
     CGImageRef image=CGBitmapContextCreateImage(ctx); CGContextRelease(ctx); if(!image)return nil;
-    NSMutableData *data=[NSMutableData data]; CGImageDestinationRef dest=CGImageDestinationCreateWithData((CFMutableDataRef)data,CFSTR("public.png"),1,NULL);
-    if(!dest){CGImageRelease(image);return nil;} CGImageDestinationAddImage(dest,image,NULL); BOOL ok=CGImageDestinationFinalize(dest);
+    NSMutableData *data=[NSMutableData data]; CGImageDestinationRef dest=CGImageDestinationCreateWithData((CFMutableDataRef)data,CFSTR("public.jpeg"),1,NULL);
+    if(!dest){CGImageRelease(image);return nil;} NSDictionary *opts=@{(id)kCGImageDestinationLossyCompressionQuality:@(0.78)}; CGImageDestinationAddImage(dest,image,(CFDictionaryRef)opts); BOOL ok=CGImageDestinationFinalize(dest);
+    NSTimeInterval ms=([NSDate timeIntervalSinceReferenceDate]-started)*1000.0;
+    if(ms>120){FILE *f=fopen("/var/tmp/radio_render_perf.log","a");if(f){fprintf(f,"render_ms=%.1f bytes=%lu\n",ms,(unsigned long)data.length);fclose(f);}}
     CFRelease(dest); CGImageRelease(image); return ok?data:nil;
 }
 
@@ -1165,9 +1166,8 @@ static void RadioActivated(id self, SEL cmd)
     if (superIMP)
         ((void(*)(id,SEL))superIMP)(self, cmd);
 
-    RadioInstallFullscreenControl(self);
-    [self performSelector:NSSelectorFromString(@"internetradioApplyFreshData") withObject:nil afterDelay:0.75];
-    NSLog(@"Radio: activated fast-shell");
+    RadioUpdateFullscreenControl(self);
+    NSLog(@"Radio: activated immediate frame");
 }
 
 static void RadioDeactivated(id self, SEL cmd)

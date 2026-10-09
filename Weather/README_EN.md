@@ -29,6 +29,10 @@ A native Weather appliance for **jailbroken Apple TV 3 (A1469 / AppleTV3,2)**. B
 - Asynchronous refresh and local caching
 - Equivalent English and Chinese editions
 
+## public2 performance update
+
+public2 carries the latest physical-device optimization: Weather no longer synchronously redraws the full weather PNG on entry. It reuses pre-rendered background/condition assets and moves the primary information to native BackRow controls; the remaining bitmap path uses JPEG. This substantially reduces entry latency and remote-navigation stalls.
+
 ## Verified status
 
 - Target: Apple TV 3 A1469 / AppleTV3,2
@@ -42,12 +46,12 @@ A native Weather appliance for **jailbroken Apple TV 3 (A1469 / AppleTV3,2)**. B
 
 Release:
 
-https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public1
+https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public2
 
 Choose one package:
 
-- `org.atv3.weather_1.0.0-public1-en_iphoneos-arm.deb` — English
-- `org.atv3.weather_1.0.0-public1-zh_iphoneos-arm.deb` — Chinese
+- `org.atv3.weather_1.0.0-public2-en_iphoneos-arm.deb` — English
+- `org.atv3.weather_1.0.0-public2-zh_iphoneos-arm.deb` — Chinese
 
 Both use the same package ID (`org.atv3.weather`), so they are alternatives and cannot be installed side by side.
 
@@ -100,8 +104,8 @@ Replace `MAC_LAN_IP` with the Mac's address. A DHCP reservation or static LAN ad
 Download the desired `.deb` and verify `SHA256SUMS`, then transfer and install it. English example:
 
 ```sh
-scp org.atv3.weather_1.0.0-public1-en_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
-ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.weather_1.0.0-public1-en_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
+scp org.atv3.weather_1.0.0-public2-en_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
+ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.weather_1.0.0-public2-en_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
 ```
 
 Use the `-zh` package name for Chinese.

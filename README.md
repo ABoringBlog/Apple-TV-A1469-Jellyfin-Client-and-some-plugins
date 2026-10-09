@@ -14,8 +14,8 @@ Independent open-source applications for **jailbroken Apple TV 3 (A1469 / AppleT
 | --- | --- | --- |
 | **[RetroReel3](#retroreel3-jellyfin-client)** | Independent, unofficial native client for Jellyfin / 非官方 Jellyfin 原生客户端 | [v0.5.85-brand1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/v0.5.85-brand1) |
 | **[Clock](Clock/)** | Native standalone clock / 原生独立时钟 | [clock-v0.1.5](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/clock-v0.1.5) |
-| **[Weather](Weather/)** | Native weather, English + 中文; requires Mac ATV3Bridge 24/7 / 原生天气，依赖 Mac 24 小时桥接 | [weather-v1.0.0-public1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public1) |
-| **[Radio](Radio/)** | Native Internet Radio, English + 中文; requires Mac ATV3Bridge Radio / 原生网络电台，依赖 Mac Bridge | [radio-v0.3.1-public1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/radio-v0.3.1-public1) |
+| **[Weather](Weather/)** | Native weather, English + 中文; requires Mac ATV3Bridge 24/7 / 原生天气，依赖 Mac 24 小时桥接 | [weather-v1.0.0-public2](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public2) |
+| **[Radio](Radio/)** | Native Internet Radio, English + 中文; requires Mac ATV3Bridge Radio / 原生网络电台，依赖 Mac Bridge | [radio-v0.3.1-public2](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/radio-v0.3.1-public2) |
 
 **All apps are free and do not require sponsorship. / 所有应用免费，赞助完全自愿。**
 

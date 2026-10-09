@@ -15,7 +15,7 @@ cd "$repo"
 [ -f "$bundle/Weather" ] && [ -f "$bundle/Info.plist" ]
 package=org.atv3.weather
 base_version=1.0.0
-version="$base_version-public1-$lang"
+version="$base_version-public2-$lang"
 arch=iphoneos-arm
 if [ "$lang" = en ]; then display="Weather for Apple TV 3 (English)"; else display="Weather for Apple TV 3 (Chinese)"; fi
 mkdir -p "$out/stage/DEBIAN" "$out/stage/Applications/AppleTV.app/Appliances"

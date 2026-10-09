@@ -12,7 +12,7 @@ def arc(name):
 with arc("control.tar.gz") as t:
     control = t.extractfile("control").read().decode()
     assert "Package: org.atv3.weather\n" in control
-    assert f"Version: 1.0.0-public1-{lang}\n" in control
+    assert f"Version: 1.0.0-public2-{lang}\n" in control
     assert "requires ATV3Bridge running continuously on a Mac" in control
 with arc("data.tar.gz") as t:
     m = {x.name:x for x in t.getmembers() if not x.isdir()}
@@ -21,6 +21,8 @@ with arc("data.tar.gz") as t:
         "Applications/AppleTV.app/Appliances/Weather.frappliance",
         p+"Weather", p+"Info.plist", p+"AppIcon.png", p+"AppIcon@1080.png",
         p+"TopRowIcon.png", p+"TopRowIcon@1080.png",
+        p+"NativeBackground.png", p+"WeatherIconSunny.png", p+"WeatherIconCloud.png",
+        p+"WeatherIconRain.png", p+"WeatherIconSnow.png", p+"WeatherIconFog.png", p+"WeatherIconStorm.png",
         p+"English.lproj/InfoPlist.strings", p+"_CodeSignature/CodeResources",
     }
     assert set(m) == expected, set(m)^expected
@@ -29,6 +31,7 @@ with arc("data.tar.gz") as t:
     binary = t.extractfile(m[p+"Weather"]).read()
     assert b"192.168." not in binary
     assert b"/var/root/.atv3-weather-bridge-url" in binary
+    assert b"public.jpeg" in binary
     info = plistlib.loads(t.extractfile(m[p+"Info.plist"]).read())
     assert info["CFBundleIdentifier"] == "org.atv3.weather"
     assert info["CFBundleVersion"] == "1.0.0"

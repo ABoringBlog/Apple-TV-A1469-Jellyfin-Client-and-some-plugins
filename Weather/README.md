@@ -28,6 +28,10 @@
 - 异步更新与本地缓存
 - 中文版和英文版功能一致
 
+## public2 性能优化
+
+本次 public2 同步了最新真机优化：进入 Weather 时不再同步重绘整张天气 PNG，而是复用预生成背景与天气图标，并将主要信息拆成 BackRow 原生控件；保留的位图渲染改为 JPEG。这样可以明显减少进入页面和遥控操作时的等待。
+
 ## 已验证状态
 
 - 目标设备：Apple TV 3 A1469 / AppleTV3,2
@@ -41,12 +45,12 @@
 
 Release：
 
-https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public1
+https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public2
 
 请选择其中一个：
 
-- `org.atv3.weather_1.0.0-public1-zh_iphoneos-arm.deb` — 中文
-- `org.atv3.weather_1.0.0-public1-en_iphoneos-arm.deb` — English
+- `org.atv3.weather_1.0.0-public2-zh_iphoneos-arm.deb` — 中文
+- `org.atv3.weather_1.0.0-public2-en_iphoneos-arm.deb` — English
 
 两个版本包 ID 相同，**只能二选一安装**。安装另一个语言版本相当于替换当前 Weather。
 
@@ -99,11 +103,11 @@ echo 'http://MAC_LAN_IP:8099/v1/weather' > /var/root/.atv3-weather-bridge-url
 在电脑下载并校验 SHA256，然后：
 
 ```sh
-scp org.atv3.weather_1.0.0-public1-zh_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
-ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.weather_1.0.0-public1-zh_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
+scp org.atv3.weather_1.0.0-public2-zh_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
+ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.weather_1.0.0-public2-zh_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
 ```
 
-英文版只需把文件名换成 `...public1-en...deb`。
+英文版只需把文件名换成 `...public2-en...deb`。
 
 ## Mac 24/7 依赖
 
