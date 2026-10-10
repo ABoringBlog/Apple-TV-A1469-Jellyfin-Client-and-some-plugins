@@ -4,13 +4,13 @@
 
 ![CloudTune icon](CloudTune.frappliance/AppIcon.png)
 
-**CloudTune v1** is an independent native music client for a jailbroken **Apple TV 3 (A1469 / AppleTV3,2)**.
+**CloudTune v1.1 public2** is an independent native music client for a jailbroken **Apple TV 3 (A1469 / AppleTV3,2)**.
 
-> **This is the first public version. The main goal for the next release is a redesigned / updated UI.**
+> **public1 was the first release; public2 is a functional update. The main goal for v2 remains a redesigned / updated UI.**
 
 > **Branding note:** the public name **CloudTune / 云律音乐** and the cloud + music-note + sound-wave icon were deliberately **invented with ChatGPT at the user's request** to replace the official name/logo used during development. They are not official NetEase Cloud Music names, logos, or artwork. This reduces direct copying and brand confusion, but does not guarantee that there is no API, service-terms, trademark, or other legal risk. CloudTune is independent and is not affiliated with or endorsed by NetEase.
 
-## v1 features
+## v1.1 public2 features
 
 - Native Apple TV 3 BackRow UI
 - QR-code account login
@@ -25,14 +25,20 @@
 - Like / unlike
 - Playback-URL prefetching and local metadata caching
 - English and Chinese builds
+- Real BackRow `BRTextEntryController` search editor
+- iPhone Control Center Remote keyboard integration
+- Search-result playback
+- Native BackRow playback-progress overlay
+- Correct manual previous/next behavior with repeat-one mode
+- Approximately 400×400 artwork requests to reduce bridge/decode overhead
 
-The search-input UI is still transitional in v1 and is planned to integrate with phone input later.
+The iPhone keyboard and system-wide phone remote are provided by the separate [Phone Remote & Text Input](../PhoneRemoteInput/) module. Remote events, text updates, and text submission have physical-ATV3 log verification.
 
 ## Version status and next goal
 
-This release is explicitly **CloudTune v1 / the first public version**.
+`cloudtune-v1.0.0-public1` was the first public release. Current `1.1.0-public2` adds phone-input search, playable search results, remote-event fixes, a native progress overlay, and artwork-request optimization.
 
-The first priority for the next version is: **redesign and update the UI**. The existing playback/account logic will remain, while layout, visuals, interaction feedback, and the overall Apple TV experience become the main focus.
+**The first priority for v2 remains a redesigned and updated UI.** The existing playback/account logic will remain while layout, visuals, interaction feedback, and the overall Apple TV experience become the main focus.
 
 ## Architecture and Mac Bridge requirement
 
@@ -77,12 +83,12 @@ export CLOUDTUNE_UPSTREAM='http://127.0.0.1:18300'
 
 Release:
 
-https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/cloudtune-v1.0.0-public1
+https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/cloudtune-v1.1.0-public2
 
 Choose one package:
 
-- `org.atv3.cloudtune_1.0.0-public1-en_iphoneos-arm.deb` — English
-- `org.atv3.cloudtune_1.0.0-public1-zh_iphoneos-arm.deb` — Chinese
+- `org.atv3.cloudtune_1.1.0-public2-en_iphoneos-arm.deb` — English
+- `org.atv3.cloudtune_1.1.0-public2-zh_iphoneos-arm.deb` — Chinese
 
 Both use package ID `org.atv3.cloudtune`, so install only one language edition.
 
@@ -130,11 +136,19 @@ A DHCP reservation or static LAN address for the Mac is recommended.
 English example:
 
 ```sh
-scp org.atv3.cloudtune_1.0.0-public1-en_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
-ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.cloudtune_1.0.0-public1-en_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
+scp org.atv3.cloudtune_1.1.0-public2-en_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
+ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.cloudtune_1.1.0-public2-en_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
 ```
 
 Use the `-zh` package for Chinese.
+
+## iPhone remote and text input
+
+CloudTune 1.1 uses a real `BRTextEntryController` for search. To navigate and type with the built-in iPhone Control Center Apple TV Remote, install the separate [Phone Remote & Text Input](../PhoneRemoteInput/) module.
+
+Physical-device logs confirm `TEXT_ENTRY_PUSH`, `TEXT_UPDATED`, and `TEXT_SUBMITTED`, plus Select, Menu, directional, and previous/next forwarding.
+
+Phone Remote & Text Input and CloudTune Bridge are **separate components**: CloudTune Bridge handles music account/data/playback URLs, while Phone Remote & Text Input handles iPhone remote events and keyboard text.
 
 ## Login and privacy
 
@@ -150,17 +164,19 @@ CloudTune Bridge listens on `0.0.0.0:8101` by default and does not add separate 
 
 ## Device and public-package verification
 
-The development ATV3 client is version `0.3.3`. The latest Mac development executable and the executable currently running on the physical ATV3 match exactly by MD5:
+The final development baseline for this update is running on the physical ATV3. Before rebuilding, the latest Mac development executable and the on-device executable matched exactly by MD5:
 
 ```text
-86e67afca8c592ef3a355b2d25b89848
+8fc370961fedbf8959c358c5b64c78ae
 ```
+
+A subsequent raw Makefile rebuild is unsigned, so its MD5 and size differ from the ad-hoc-signed device file; the rebuilt and device Mach-O files still share the exact same `LC_UUID`.
 
 The public build is rebranded and privacy-sanitized, so it is not a byte-for-byte copy of the development binary.
 
 The public English and Chinese `.deb` packages pass ARMv7 build validation, ad-hoc signature validation, strict package-payload checks, private-IP/local-path scanning, and two independent byte-for-byte reproducible builds.
 
-**The sanitized public v1 `.deb` packages have not yet received a separate physical-device installation acceptance test.**
+**The rebranded/sanitized 1.1 public2 `.deb` packages have not yet received a separate physical-device installation acceptance test.** The current development baseline and phone-input path are device-verified; the public2 packages are independently built, signed, and validated offline.
 
 ## Build from source
 

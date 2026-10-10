@@ -1,6 +1,6 @@
 # Apple TV 3 Modernization
 
-[← Bilingual README](README.md) · [Clock English README](Clock/README_EN.md) · [Weather English README](Weather/README_EN.md) · [Radio English README](Radio/README_EN.md) · [CloudTune English README](CloudTune/README_EN.md)
+[← Bilingual README](README.md) · [Clock English README](Clock/README_EN.md) · [Weather English README](Weather/README_EN.md) · [Radio English README](Radio/README_EN.md) · [CloudTune English README](CloudTune/README_EN.md) · [Phone Remote & Text Input](PhoneRemoteInput/README_EN.md)
 
 Independent open-source applications for **jailbroken Apple TV 3 (A1469 / AppleTV3,2)**.
 
@@ -14,13 +14,16 @@ Each application is independently installable, has its own package ID and releas
 | **Clock** | Native standalone Apple TV 3 clock | [clock-v0.1.5](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/clock-v0.1.5) |
 | **Weather** | Native weather in English or Chinese; requires Mac ATV3Bridge 24/7 | [weather-v1.0.0-public2](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/weather-v1.0.0-public2) |
 | **Radio** | Native Internet Radio in English or Chinese; requires Mac ATV3Bridge Radio | [radio-v0.3.1-public2](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/radio-v0.3.1-public2) |
-| **CloudTune** | Independent music client in English or Chinese; requires Mac CloudTune Bridge | [cloudtune-v1.0.0-public1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/cloudtune-v1.0.0-public1) |
+| **CloudTune** | Independent music client; 1.1 adds phone-input search integration | [cloudtune-v1.1.0-public2](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/cloudtune-v1.1.0-public2) |
+| **Phone Remote & Text Input** | iPhone Control Center Remote + keyboard input for ATV3 | [phone-remote-input-v1.0.0-public1](https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/phone-remote-input-v1.0.0-public1) |
 
 > **Weather runtime requirement:** the current Weather app requires a Mac running ATV3Bridge continuously (24/7) for fresh live data.
 
 > **Radio runtime requirement:** the current Radio app requires a Mac running ATV3Bridge Radio continuously for station directory, search, favorites, and recent-history data.
 
-> **CloudTune runtime requirement:** CloudTune v1 requires a Mac running CloudTune Bridge continuously plus a compatible local upstream API. Its public name and icon were intentionally invented with ChatGPT at the user's request instead of using official branding.
+> **CloudTune runtime requirement:** CloudTune 1.1 requires a Mac running CloudTune Bridge continuously plus a compatible local upstream API. iPhone Remote keyboard/search integration uses the separate Phone Remote & Text Input module.
+
+> **Phone Remote & Text Input runtime:** the Mac emulates a Companion Link target and relays input to the ATV3 through an SSH tunnel and a loopback-only MobileSubstrate injector. Core remote and text-input paths have physical-device verification.
 
 ## RetroReel3
 

@@ -245,7 +245,8 @@ def prefetch_cover(source):
     file=folder/(key+'.bin')
     mime=folder/(key+'.mime')
     if file.exists() and mime.exists():return
-    with urllib.request.urlopen(source,timeout=10) as response:
+    sized=source+('&' if '?' in source else '?')+'param=400y400'
+    with urllib.request.urlopen(urllib.request.Request(sized,headers={'User-Agent':'Mozilla/5.0'}),timeout=10) as response:
         content_type=response.headers.get('Content-Type','image/jpeg').split(';')[0].strip()
         data=response.read(1200001)
     if content_type not in ('image/jpeg','image/jpg','image/png','image/webp'):return
@@ -260,7 +261,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
     def do_GET(self):
         u=urllib.parse.urlsplit(self.path);path=u.path;q=urllib.parse.parse_qs(u.query)
-        if path=='/health':return self.respond(200,{'ok':True,'service':'CloudTune Bridge','version':'0.2.0'})
+        if path=='/health':return self.respond(200,{'ok':True,'service':'CloudTune Bridge','version':'0.3.0'})
         if path=='/v1/music/mirror/start':
             if not MIRROR_RUNNING:threading.Thread(target=mirror_sync,daemon=True,name='cloudtune-mirror-sync').start()
             return self.respond(200,{'ok':True,'running':MIRROR_RUNNING})
@@ -323,7 +324,8 @@ class Handler(BaseHTTPRequestHandler):
                 try:
                     raw=image_path.read_bytes();content_type=mime_path.read_text()
                 except OSError:
-                    request=urllib.request.Request(source,headers={'User-Agent':'Mozilla/5.0'})
+                    sized=source+('&' if '?' in source else '?')+'param=400y400'
+                    request=urllib.request.Request(sized,headers={'User-Agent':'Mozilla/5.0'})
                     with urllib.request.urlopen(request,timeout=10) as upstream:
                         content_type=upstream.headers.get('Content-Type','').split(';')[0].strip()
                         if content_type not in ('image/jpeg','image/jpg','image/png','image/webp'):

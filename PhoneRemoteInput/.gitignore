@@ -1,0 +1,12 @@
+/.venv/
+/upstream-atvr4samsung/
+/build/
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+/private_state.json
+/native_remote_state/
+/dmap_pairing_status.json
+/dmap_pairing_guid.private
+/injector-token

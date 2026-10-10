@@ -4,13 +4,13 @@
 
 ![CloudTune icon](CloudTune.frappliance/AppIcon.png)
 
-**CloudTune / 云律音乐 v1** 是一个面向已越狱 **Apple TV 3（A1469 / AppleTV3,2）** 的独立原生音乐客户端。
+**CloudTune / 云律音乐 v1.1 public2** 是一个面向已越狱 **Apple TV 3（A1469 / AppleTV3,2）** 的独立原生音乐客户端。
 
-> **这是第一版。下一版的主要目标是重新设计 / 更新 UI。**
+> **public1 是第一版；当前 public2 是功能更新。v2 的主要目标仍然是重新设计 / 更新 UI。**
 
 > **品牌说明：**「CloudTune / 云律音乐」这个名字，以及公开版使用的云朵 + 音符 + 声波图标，都是用户明确要求 **ChatGPT 临时创作 / 虚构** 的独立品牌，用来替代开发阶段使用的网易云官方名称和官方图标，减少直接复制官方品牌资产带来的版权、商标和用户混淆风险。它们不是网易云音乐官方名称、Logo 或素材，本项目与网易没有隶属、授权或官方合作关系。这个做法只能降低品牌混淆风险，并不保证项目不存在其他 API、服务条款或法律风险。
 
-## v1 当前功能
+## v1.1 public2 当前功能
 
 - Apple TV 3 原生 BackRow UI
 - 二维码登录
@@ -25,12 +25,20 @@
 - 喜欢 / 取消喜欢
 - 播放地址预取与本地元数据缓存
 - 中文版与 English 版
+- 真正的 BackRow `BRTextEntryController` 搜索界面
+- iPhone Control Center Remote 键盘输入集成
+- 搜索结果直接播放
+- 原生 BackRow 播放进度覆盖层
+- 手动上一首 / 下一首与单曲循环逻辑修正
+- 封面请求统一为约 400×400，降低桥接和解码负担
 
-当前 ATV UI 中的搜索输入仍属于第一版过渡功能，后续计划与手机输入功能整合。
+手机键盘和系统级手机遥控由独立的 [Phone Remote & Text Input](../PhoneRemoteInput/) 模块提供。该模块的遥控事件、文字更新和文字提交均已有 ATV3 真机日志验证。
 
-## 第一版 / 下一版计划
+## 版本状态 / 下一版计划
 
-本次 Release 明确作为 **CloudTune v1 / 第一版**。下一版的首要目标是：**重做并更新 UI**。功能逻辑会继续保留，但视觉结构、布局、操作反馈和整体 Apple TV 使用体验会作为下一阶段重点。
+`cloudtune-v1.0.0-public1` 是第一版。当前 `1.1.0-public2` 在保持原有功能的基础上加入手机输入搜索、搜索结果播放、遥控事件修复、原生进度条和封面请求优化。
+
+**v2 的首要目标仍然是重做并更新 UI。** 功能逻辑会继续保留，但视觉结构、布局、操作反馈和整体 Apple TV 使用体验会作为下一阶段重点。
 
 ## 架构与 Mac Bridge 要求
 
@@ -73,12 +81,12 @@ export CLOUDTUNE_UPSTREAM='http://127.0.0.1:18300'
 
 Release：
 
-https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/cloudtune-v1.0.0-public1
+https://github.com/ABoringBlog/Apple-TV-A1469-Jellyfin-Client-and-some-plugins/releases/tag/cloudtune-v1.1.0-public2
 
 请选择一个：
 
-- `org.atv3.cloudtune_1.0.0-public1-zh_iphoneos-arm.deb` — 中文
-- `org.atv3.cloudtune_1.0.0-public1-en_iphoneos-arm.deb` — English
+- `org.atv3.cloudtune_1.1.0-public2-zh_iphoneos-arm.deb` — 中文
+- `org.atv3.cloudtune_1.1.0-public2-en_iphoneos-arm.deb` — English
 
 两个版本包 ID 都是 `org.atv3.cloudtune`，所以只能二选一安装。
 
@@ -126,11 +134,19 @@ echo 'http://MAC_LAN_IP:8101' > /var/root/.atv3-cloudtune-bridge-url
 中文示例：
 
 ```sh
-scp org.atv3.cloudtune_1.0.0-public1-zh_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
-ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.cloudtune_1.0.0-public1-zh_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
+scp org.atv3.cloudtune_1.1.0-public2-zh_iphoneos-arm.deb root@APPLE_TV_IP:/var/root/
+ssh root@APPLE_TV_IP 'dpkg -i /var/root/org.atv3.cloudtune_1.1.0-public2-zh_iphoneos-arm.deb && launchctl stop com.apple.frontrow && launchctl start com.apple.frontrow'
 ```
 
-English 版把文件名换成 `...public1-en...deb`。
+English 版把文件名换成 `...public2-en...deb`。
+
+## iPhone 手机遥控和文字输入
+
+CloudTune 1.1 的搜索页使用真实 `BRTextEntryController`。如需直接使用 iPhone 自带控制中心 Apple TV Remote 进行导航和键盘输入，请安装独立的 [Phone Remote & Text Input](../PhoneRemoteInput/) 模块。
+
+真机已经观察到 `TEXT_ENTRY_PUSH`、`TEXT_UPDATED` 和 `TEXT_SUBMITTED`，并验证 Select、Menu、方向键以及媒体上一首 / 下一首转发。
+
+该模块和 CloudTune Bridge 是**两个不同组件**：CloudTune Bridge 负责音乐账号 / 数据 / 播放 URL；Phone Remote & Text Input 负责 iPhone 遥控和文字输入。
 
 ## 登录与隐私
 
@@ -146,17 +162,19 @@ CloudTune Bridge 默认监听 `0.0.0.0:8101` 且没有自己的 LAN 身份认证
 
 ## 真机与公开包验证
 
-开发阶段的 ATV3 客户端版本为 `0.3.3`。当前 Mac 最终开发构建与 ATV3 真机正在运行的开发版可执行文件 MD5 完全一致：
+这次更新后的最终开发基线已经直接在 ATV3 上运行。重新构建前，Mac 最新开发二进制与真机文件 MD5 完全一致：
 
 ```text
-86e67afca8c592ef3a355b2d25b89848
+8fc370961fedbf8959c358c5b64c78ae
 ```
+
+之后重新执行原始 Makefile 会生成未签名文件，因此 MD5/文件大小变化；但新构建与真机文件的 Mach-O `LC_UUID` 仍完全一致。真机文件是 ad-hoc 签名版本。
 
 公开版进行了重新品牌化和隐私清理，因此不是原开发二进制的直接复制。
 
 公开中文 / English `.deb`：ARMv7 构建通过、ad-hoc 签名验证通过、严格包结构检查通过、私人 IP / 本机路径扫描通过，并连续两次独立构建 byte-for-byte 一致。
 
-**public v1 的清理后 `.deb` 尚未单独在真机安装验收。**
+**1.1 public2 的重新品牌化 / 清理后 `.deb` 尚未单独在真机安装验收。** 最新开发基线和手机输入链路已在真机验证，public2 包本身完成的是独立构建、签名与离线验证。
 
 ## 从源码构建
 

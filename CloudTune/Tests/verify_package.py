@@ -16,7 +16,7 @@ def arc(name):
 with arc("control.tar.gz") as t:
     control=t.extractfile("control").read().decode()
     assert "Package: org.atv3.cloudtune\n" in control
-    assert f"Version: 1.0.0-public1-{lang}\n" in control
+    assert f"Version: 1.1.0-public2-{lang}\n" in control
     assert "Architecture: iphoneos-arm\n" in control
     assert "requires a Mac CloudTune Bridge" in control
 
@@ -43,11 +43,14 @@ with arc("data.tar.gz") as t:
     assert b"ATVCloudTuneController" in binary
     assert b"CloudTuneAppliance" in binary
     assert b"CloudTune" in binary
+    assert b"BRTextEntryController" in binary
+    assert b"cloudtuneOpenSearchEditor" in binary
+    assert b"cloudtuneTimerFire:" in binary
 
     info=plistlib.loads(t.extractfile(m[p+"Info.plist"]).read())
     assert info["CFBundleIdentifier"]=="org.atv3.cloudtune"
     assert info["CFBundleExecutable"]=="CloudTune"
-    assert info["CFBundleVersion"]=="1.0.0"
+    assert info["CFBundleVersion"]=="1.1.0"
     assert info["FRApplianceIdentifier"]=="cloudtune"
 
     locale=t.extractfile(m[p+"English.lproj/InfoPlist.strings"]).read()

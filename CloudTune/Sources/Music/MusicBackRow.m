@@ -84,8 +84,10 @@ static void AppSaverSet(BOOL inhibit) {
 }
 
 static char cloudtuneTimerKey;
+static char musicSearchEditorKey;
 static NSMutableArray *musicRows;
 static NSString *musicPage=@"Home";
+static BOOL musicConsumedMenuPress=NO;
 static NSInteger musicSelected=0;
 static AVPlayer *musicPlayer=nil;
 static NSString *musicNowPlaying=nil;
@@ -155,6 +157,7 @@ static BOOL musicLikeLoaded=NO;
 static NSUInteger musicPlayGeneration=0;
 static id musicActiveController=nil;
 static void MusicQueueAdvance(id controller,NSInteger delta);
+static void MusicQueueAdvanceAutomatic(id controller);
 static void MusicRefresh(id self,SEL cmd);
 static void MusicQueuePlay(id controller);
 
@@ -207,7 +210,7 @@ static void MusicPlayStation(id controller,NSDictionary *item);
 @implementation MusicPlaybackMonitor
 - (void)playerEnded:(NSNotification *)note {
     if(musicPlayer && [note object]==musicPlayer.currentItem && musicActiveController)
-        MusicQueueAdvance(musicActiveController,1);
+        MusicQueueAdvanceAutomatic(musicActiveController);
 }
 
 - (void)playerFailed:(NSNotification *)note {
@@ -444,11 +447,11 @@ static void MusicQueuePlay(id controller) {
     }
     if(ids.count)[NSThread detachNewThreadSelector:NSSelectorFromString(@"cloudtunePrefetchNext:") toTarget:controller withObject:[ids componentsJoinedByString:@","]];
 }
-static void MusicQueueAdvance(id controller,NSInteger delta) {
+static void MusicQueueAdvanceWithMode(id controller,NSInteger delta,BOOL automatic) {
     NSInteger count=(NSInteger)musicQueue.count;
     if(!count)return;
     NSInteger next=musicQueueIndex;
-    if(delta>0 && musicPlayMode==1){
+    if(automatic && delta>0 && musicPlayMode==1){
         /* Single-track repeat, preserve current position. */
     }else if(delta>0 && musicPlayMode==2 && count>1){
         next=(musicQueueIndex+1+arc4random_uniform((u_int32_t)(count-1)))%count;
@@ -460,6 +463,12 @@ static void MusicQueueAdvance(id controller,NSInteger delta) {
     musicQueueIndex=next;
     MusicQueuePlay(controller);
     MusicRefresh(controller,NULL);
+}
+static void MusicQueueAdvance(id controller,NSInteger delta) {
+    MusicQueueAdvanceWithMode(controller,delta,NO);
+}
+static void MusicQueueAdvanceAutomatic(id controller) {
+    MusicQueueAdvanceWithMode(controller,1,YES);
 }
 static void MusicLoadBackground(id controller) {
     NSAutoreleasePool *pool=[[NSAutoreleasePool alloc]init];
@@ -824,7 +833,7 @@ static NSData *MusicRenderImage(void)
     if ([page isEqual:@"Search"]) {
         MusicText(ctx,CloudTuneL(@"输入歌曲或歌手名称", @"Enter a track or artist"),374,455,32,1);
         MusicText(ctx,search.length?search:@"_",374,396,32,1);
-        MusicText(ctx,CloudTuneL(@"搜索功能暂留，后续由手机输入", @"Search input will move to phone input in a later version"),374,345,27,1);
+        MusicText(ctx,CloudTuneL(@"按确认键打开搜索；已支持 iPhone 遥控器键盘输入", @"Press Select to search; iPhone Remote keyboard input is supported"),374,345,27,1);
     } else if([page isEqual:@"NowPlaying"]){
         CGContextSetRGBFillColor(ctx,0.055,0.055,0.070,1);CGContextFillRect(ctx,CGRectMake(0,0,1280,720));
         CGImageRef art=NULL;
@@ -861,7 +870,7 @@ static NSData *MusicRenderImage(void)
         if(duration>0){
             CGFloat fraction=MIN(1.0,MAX(0.0,seconds/duration));
             CGContextSetRGBFillColor(ctx,0.27,0.27,0.30,1);CGContextFillRect(ctx,CGRectMake(610,147,540,10));
-            CGContextSetRGBFillColor(ctx,0.84,0.16,0.22,1);CGContextFillRect(ctx,CGRectMake(610,147,540*fraction,10));
+            (void)fraction; /* progress is a native BackRow image-control overlay */
             MusicText(ctx,[NSString stringWithFormat:@"%02d:%02d",(int)seconds/60,(int)seconds%60],610,169,22,1);
             MusicText(ctx,[NSString stringWithFormat:@"%02d:%02d",(int)duration/60,(int)duration%60],1085,169,22,1);
         }
@@ -1211,6 +1220,51 @@ static void MusicUpdateFullscreenControl(id self)
 }
 
 
+static char MusicProgressNativeKey;
+static id MusicSolidProgressImage(void){
+    unsigned char pixels[4*4*4];
+    for(int i=0;i<16;i++){pixels[i*4]=214;pixels[i*4+1]=41;pixels[i*4+2]=56;pixels[i*4+3]=255;}
+    CGColorSpaceRef space=CGColorSpaceCreateDeviceRGB();
+    CGContextRef context=CGBitmapContextCreate(pixels,4,4,8,16,space,kCGImageAlphaPremultipliedLast|kCGBitmapByteOrder32Big);
+    CGColorSpaceRelease(space);
+    if(!context)return nil;
+    CGImageRef pic=CGBitmapContextCreateImage(context);CGContextRelease(context);
+    if(!pic)return nil;
+    NSMutableData *data=[NSMutableData data];
+    CGImageDestinationRef destination=CGImageDestinationCreateWithData((CFMutableDataRef)data,CFSTR("public.png"),1,NULL);
+    if(!destination){CGImageRelease(pic);return nil;}
+    CGImageDestinationAddImage(destination,pic,NULL);
+    BOOL ok=CGImageDestinationFinalize(destination);CFRelease(destination);CGImageRelease(pic);
+    Class imageClass=NSClassFromString(@"ATVImage");
+    return ok && imageClass?((id(*)(id,SEL,id))objc_msgSend)(imageClass,NSSelectorFromString(@"imageWithData:"),data):nil;
+}
+static void MusicProgressFrame(id self){
+    id control=objc_getAssociatedObject(self,&MusicProgressNativeKey);
+    if(!control)return;
+    CGRect bounds=CGRectZero;
+    if(!MusicBackRowBounds(self,&bounds))return;
+    double sec=musicPlayer?CMTimeGetSeconds(musicPlayer.currentTime):0;
+    double length=musicPlayer?CMTimeGetSeconds(musicPlayer.currentItem.duration):0;
+    if(!isfinite(length)||length<=0){id ms=[musicPlayingStation objectForKey:@"duration_ms"];length=[ms respondsToSelector:@selector(doubleValue)]?[ms doubleValue]/1000.:0;}
+    BOOL visible=[musicPage isEqual:@"NowPlaying"]&&length>0&&isfinite(sec);
+    double fract=visible?fmax(0.,fmin(1.,sec/length)):0.;
+    CGRect frame=CGRectMake(bounds.origin.x+bounds.size.width*610./1280.,bounds.origin.y+bounds.size.height*147./720.,bounds.size.width*(540.*fract)/1280.,bounds.size.height*10./720.);
+    if(!visible)frame.size.width=0;
+    MusicBackRowSetFrame(control,frame);
+}
+static void MusicProgressInstall(id self){
+    if(objc_getAssociatedObject(self,&MusicProgressNativeKey))return;
+    id view=MusicNew(NSClassFromString(@"BRImageControl"));
+    id img=MusicSolidProgressImage();
+    if(!view||!img){[view release];return;}
+    SEL set=NSSelectorFromString(@"setImage:");
+    if(![view respondsToSelector:set]||![self respondsToSelector:NSSelectorFromString(@"addSubview:")]){[view release];return;}
+    ((void(*)(id,SEL,id))objc_msgSend)(view,set,img);
+    ((void(*)(id,SEL,id))objc_msgSend)(self,NSSelectorFromString(@"addSubview:"),view);
+    objc_setAssociatedObject(self,&MusicProgressNativeKey,view,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [view release];
+    MusicProgressFrame(self);
+}
 static char MusicTimeTextKey;
 static char MusicDateTextKey;
 static char MusicHourlyTextKey;
@@ -1524,6 +1578,8 @@ static void MusicRefresh(id self, SEL cmd)
     (void)cmd;
 
     MusicUpdateFullscreenControl(self);
+    MusicProgressInstall(self);
+    MusicProgressFrame(self);
 
     NSString *time = MusicCurrentTime();
     NSString *date = MusicCurrentDate();
@@ -1621,7 +1677,8 @@ static void MusicTimerFire(id self, SEL cmd, id timer)
     /* Remote actions and incoming data always repaint immediately. The 1-second
        watchdog still checks playback, but only repaints progress every 3 seconds.
        Idle/library views need no continuous full-screen image encoding. */
-    NSTimeInterval interval=(musicPlayer && !musicPaused)?3.0:30.0;
+    MusicProgressFrame(self);
+    NSTimeInterval interval=(musicPlayer && !musicPaused)?1.0:30.0;
     if(now-musicLastTimerPaint>=interval){
         musicLastTimerPaint=now;
         MusicRefresh(self,NULL);
@@ -1668,7 +1725,7 @@ static id MusicControllerInit(id self, SEL cmd)
     musicPage=@"Home";musicSelected=0;
 
     NSTimer *timer =
-        [NSTimer scheduledTimerWithTimeInterval:1.0
+        [NSTimer scheduledTimerWithTimeInterval:0.033
                                         target:self
                                       selector:NSSelectorFromString(@"cloudtuneTimerFire:")
                                       userInfo:nil
@@ -1975,6 +2032,7 @@ static void MusicShortConfirm(id self){
 static void MusicSingleOKFallback(id self,SEL cmd,id token){
     (void)cmd;
     if([token unsignedIntegerValue]!=musicSingleOKToken || musicOKDownAt>0)return;
+    if(musicOKDownAt>0)return;
     if([NSDate timeIntervalSinceReferenceDate]-musicLastPairAt<0.7)return;
     MusicShortConfirm(self);
 }
@@ -1985,15 +2043,62 @@ static void MusicOKReset(id self,SEL cmd,id token){
 static void MusicOpenFullscreen(id self,SEL cmd,id token){
     (void)cmd;
     if([token unsignedIntegerValue]!=musicOKHoldToken || musicOKHoldDone || musicOKDownAt<=0 || !musicPlayer ||
-       !([musicPage isEqual:@"Tracks"] || [musicPage isEqual:@"Recommend"] || [musicPage isEqual:@"Recent"]))return;
+       !([musicPage isEqual:@"Tracks"] || [musicPage isEqual:@"Recommend"] || [musicPage isEqual:@"Recent"] || [musicPage isEqual:@"Results"]))return;
     musicOKHoldDone=YES;
     musicOKDownAt=0;
     if(![musicPage isEqual:@"NowPlaying"]){musicReturnPage=musicPage;musicPage=@"NowPlaying";MusicRefresh(self,NULL);}
 }
+static void MusicSearchEditorFinished(id self,SEL cmd,id sender){
+    (void)cmd;
+    id editor=objc_getAssociatedObject(self,&musicSearchEditorKey);
+    if(!editor)return;
+    id inner=((id(*)(id,SEL))objc_msgSend)(editor,NSSelectorFromString(@"editor"));
+    id field=((id(*)(id,SEL))objc_msgSend)(inner,NSSelectorFromString(@"textField"));
+    if(sender!=field)return;
+    id value=((id(*)(id,SEL))objc_msgSend)(field,NSSelectorFromString(@"stringValue"));
+    NSString *query=[value isKindOfClass:[NSString class]]?[value copy]:[@"" copy];
+    ((void(*)(id,SEL,id))objc_msgSend)(editor,NSSelectorFromString(@"setTextFieldDelegate:"),nil);
+    id stack=((id(*)(id,SEL))objc_msgSend)(self,NSSelectorFromString(@"stack"));
+    objc_setAssociatedObject(self,&musicSearchEditorKey,nil,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    if(stack && [stack respondsToSelector:NSSelectorFromString(@"popController")])
+        ((void(*)(id,SEL))objc_msgSend)(stack,NSSelectorFromString(@"popController"));
+    NSString *trim=[query stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if(trim.length && trim.length<=80){
+        [musicQuery release];musicQuery=[trim copy];
+        musicPage=@"Results";musicSelected=0;MusicLoad(self);
+    }
+    [query release];MusicRefresh(self,NULL);
+}
+static void MusicSearchEditorChanged(id self,SEL cmd,id sender){(void)self;(void)cmd;(void)sender;}
+static void MusicOpenSearchEditor(id self,SEL cmd){
+    (void)cmd;
+    if(objc_getAssociatedObject(self,&musicSearchEditorKey))return;
+    Class cls=NSClassFromString(@"BRTextEntryController");
+    SEL initSel=NSSelectorFromString(@"initWithTextEntryStyle:");
+    if(!cls || !class_getInstanceMethod(cls,initSel)){
+        musicStatus=CloudTuneL(@"文字输入暂不可用", @"Text input is currently unavailable");MusicRefresh(self,NULL);return;
+    }
+    id editor=((id(*)(id,SEL,int))objc_msgSend)([cls alloc],initSel,4);
+    id stack=[self respondsToSelector:NSSelectorFromString(@"stack")]?((id(*)(id,SEL))objc_msgSend)(self,NSSelectorFromString(@"stack")):nil;
+    SEL push=NSSelectorFromString(@"pushController:");
+    SEL fieldDelegate=NSSelectorFromString(@"setTextFieldDelegate:");
+    SEL label=NSSelectorFromString(@"setTextEntryTextFieldLabel:");
+    SEL initial=NSSelectorFromString(@"setInitialTextEntryText:");
+    if(!editor || !stack || ![stack respondsToSelector:push] || ![editor respondsToSelector:fieldDelegate] ||
+       ![editor respondsToSelector:label] || ![editor respondsToSelector:initial]){
+        [editor release];musicStatus=CloudTuneL(@"文字输入暂不可用", @"Text input is currently unavailable");MusicRefresh(self,NULL);return;
+    }
+    ((void(*)(id,SEL,id))objc_msgSend)(editor,label,CloudTuneL(@"搜索歌曲或歌手", @"Search tracks or artists"));
+    ((void(*)(id,SEL,id))objc_msgSend)(editor,initial,@"");
+    ((void(*)(id,SEL,id))objc_msgSend)(editor,fieldDelegate,self);
+    objc_setAssociatedObject(self,&musicSearchEditorKey,editor,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    ((void(*)(id,SEL,id))objc_msgSend)(stack,push,editor);
+    [editor release];
+}
 static void MusicChoose(id controller) {
     (void)controller;
     if([musicPage isEqual:@"Search"]){
-        musicStatus=CloudTuneL(@"搜索暂未开放：后续使用手机输入", @"Search input will be provided through phone input later");
+        [controller performSelector:NSSelectorFromString(@"cloudtuneOpenSearchEditor")];
         return;
     }
     if([musicPage isEqual:@"Account"]){
@@ -2017,7 +2122,7 @@ static void MusicChoose(id controller) {
         [musicRows release];musicRows=[[NSMutableArray alloc]initWithArray:cached?:@[]];
         [NSThread detachNewThreadSelector:NSSelectorFromString(@"cloudtuneTracksLoad:") toTarget:controller withObject:nil];return;
     }
-    if([musicPage isEqual:@"Tracks"] || [musicPage isEqual:@"Recommend"] || [musicPage isEqual:@"Recent"]){
+    if([musicPage isEqual:@"Tracks"] || [musicPage isEqual:@"Recommend"] || [musicPage isEqual:@"Recent"] || [musicPage isEqual:@"Results"]){
         if(musicSelected<0 || musicSelected>=(NSInteger)[musicRows count])return;
         NSDictionary *candidate=[musicRows objectAtIndex:musicSelected];
         NSString *candidateID=[candidate objectForKey:@"id"];
@@ -2033,10 +2138,14 @@ static void MusicChoose(id controller) {
         MusicQueuePlay(controller);
         return;
     }
-    if([musicPage isEqual:@"Results"]){musicStatus=CloudTuneL(@"播放尚未授权，当前仅提供歌曲信息", @"Playback is not authorized; metadata only");return;}
+
     if([musicPage isEqual:@"Home"]){
         NSArray *pages=@[@"Recommend",@"Search",@"Playlists",@"Recent",@"Account"];
         if(musicSelected>=0&&musicSelected<(NSInteger)[pages count])musicPage=[pages objectAtIndex:musicSelected];
+        if([musicPage isEqual:@"Search"]){
+            [controller performSelector:NSSelectorFromString(@"cloudtuneOpenSearchEditor")];
+            return;
+        }
         if([musicPage isEqual:@"Recommend"] || [musicPage isEqual:@"Recent"]){
             [musicRows release];musicRows=[[NSMutableArray alloc]init];
             musicSelected=0;musicLoading=YES;musicStatus=CloudTuneL(@"正在读取歌曲…", @"Loading tracks...");
@@ -2062,8 +2171,22 @@ static BOOL MusicEvent(id self, SEL cmd, id event)
     if(MusicEventInteger(event,@"originator",&origin)&&MusicEventInteger(event,@"remoteAction",&action)&&MusicEventInteger(event,@"value",&value)) {
         if(action==5||action==9||action==10||action==11||action==12||action==22||action==23||action==24) MusicLogRemote(action,value,origin,"raw");
     }
-    BOOL songPage=[musicPage isEqual:@"Tracks"] || [musicPage isEqual:@"Recommend"] || [musicPage isEqual:@"Recent"] || [musicPage isEqual:@"NowPlaying"];
-    if(origin==1 && songPage && (action==22 || action==23)){
+    if ((action==3 || action==4) && (origin==1 || origin==3)) {
+        FILE *f=fopen("/var/tmp/cloudtune_direction_diag.log","a");
+        if(f){fprintf(f,"direction action=%ld value=%ld origin=%ld selected=%ld page=%s rows=%ld\n",(long)action,(long)value,(long)origin,(long)musicSelected,[musicPage UTF8String],(long)musicRows.count);fclose(f);}
+    }
+    // BackRow sends separate press/release events. If this appliance handles
+    // a Menu press internally, its release must not reach the superclass and
+    // unexpectedly pop the whole appliance after a page transition.
+    if ((origin==1 || origin==3) && (action==1 || action==2)) {
+        if (value==1) musicConsumedMenuPress=![musicPage isEqual:@"Home"];
+        else if (value==0 && musicConsumedMenuPress) {
+            musicConsumedMenuPress=NO;
+            return YES;
+        }
+    }
+    BOOL songPage=[musicPage isEqual:@"Tracks"] || [musicPage isEqual:@"Recommend"] || [musicPage isEqual:@"Recent"] || [musicPage isEqual:@"Results"] || [musicPage isEqual:@"NowPlaying"];
+    if((origin==1 || origin==3) && songPage && (action==22 || action==23)){
         musicSingleOKToken++;
         musicLastPairAt=[NSDate timeIntervalSinceReferenceDate];
         if(action==22 && value==1){
@@ -2083,20 +2206,38 @@ static BOOL MusicEvent(id self, SEL cmd, id event)
         }
         return YES;
     }
-    if(origin==1 && action==5 && songPage){
+    if((origin==1 || origin==3) && action==5 && songPage){
         if(value==1){
             musicSingleOKToken++;
+            musicOKDownAt=[NSDate timeIntervalSinceReferenceDate];
+            musicOKHoldDone=NO;
+            musicOKHoldToken++;
+            [self performSelector:NSSelectorFromString(@"cloudtuneOKHold:") withObject:@(musicOKHoldToken) afterDelay:0.7];
+            // Legacy DMAP select may never send release. Keep its short-click fallback.
             [self performSelector:NSSelectorFromString(@"cloudtuneSingleOKFallback:") withObject:@(musicSingleOKToken) afterDelay:0.48];
+        } else if(value==0 && musicOKDownAt>0){
+            BOOL quick=!musicOKHoldDone && ([NSDate timeIntervalSinceReferenceDate]-musicOKDownAt<0.7);
+            musicOKDownAt=0;
+            musicOKHoldToken++;
+            musicOKHoldDone=NO;
+            musicSingleOKToken++;
+            if(quick)MusicShortConfirm(self);
         }
         return YES;
     }
-    if(origin==1 && (action==5 || action==22 || action==23) && value==0 && !songPage){return YES;}
-    if(origin==1 && (action==10 || action==12) && (value==0 || value==1) && [musicQueue count]) {
+    if((origin==1 || origin==3) && (action==5 || action==22 || action==23) && value==0 && !songPage){return YES;}
+    if((origin==1 || origin==3) && (action==9 || action==12) && value==1 && [musicQueue count]) {
+        MusicQueueAdvance(self,action==9?-1:1);
+        MusicRefresh(self,NULL);
+        return YES;
+    }
+    if((origin==1 || origin==3) && action==12 && value==0)return YES;
+    if((origin==1 || origin==3) && action==10 && (value==0 || value==1) && [musicQueue count]) {
         MusicNextKey(self,action,value);
         MusicRefresh(self,NULL);
         return YES;
     }
-    if (origin==1 && value==1) {
+    if ((origin==1 || origin==3) && (value==1 || (value==2 && (action==3 || action==4)))) {
         if([musicPage isEqual:@"NowPlaying"] && (action==1||action==2)){
             musicPage=musicReturnPage?:@"Tracks";MusicRefresh(self,NULL);return YES;
         }
@@ -3513,6 +3654,9 @@ static void MusicEnsureTimerSelector(void)
 
     if (!cls)
         return;
+    class_addMethod(cls,NSSelectorFromString(@"cloudtuneOpenSearchEditor"),(IMP)MusicOpenSearchEditor,"v@:");
+    class_addMethod(cls,NSSelectorFromString(@"textDidEndEditing:"),(IMP)MusicSearchEditorFinished,"v@:@");
+    class_addMethod(cls,NSSelectorFromString(@"textDidChange:"),(IMP)MusicSearchEditorChanged,"v@:@");
     class_addMethod(cls,NSSelectorFromString(@"cloudtuneQRStart:"),(IMP)MusicQRStartSelector,"v@:@");
     class_addMethod(cls,NSSelectorFromString(@"cloudtuneQRCheck:"),(IMP)MusicQRCheckSelector,"v@:@");
     class_addMethod(cls,NSSelectorFromString(@"cloudtunePlaylistsLoad:"),(IMP)MusicPlaylistsSelector,"v@:@");

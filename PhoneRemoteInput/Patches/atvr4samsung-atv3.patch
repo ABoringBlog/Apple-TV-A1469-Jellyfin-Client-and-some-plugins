@@ -1,0 +1,211 @@
+diff --git a/src/atvr4samsung/companion/relay.py b/src/atvr4samsung/companion/relay.py
+index 5ec0174..ecf1fa6 100644
+--- a/src/atvr4samsung/companion/relay.py
++++ b/src/atvr4samsung/companion/relay.py
+@@ -7,6 +7,7 @@ live Companion protocol/asyncio instance. This layer is I/O-free: it hands finis
+ """
+ from __future__ import annotations
+
++import asyncio
+ import logging
+ import time
+ from dataclasses import dataclass
+@@ -102,8 +103,11 @@ class CommandRelay:
+         self._hold_dir: Optional[str] = None       # candidate direction currently dwelling
+         self._hold_since_ms: float = 0.0           # when the candidate direction started
+         self._hold_active = False                  # a repeat is currently running for _hold_dir
++        self._hold_timer = None
+         self._hold_was_active = False              # a hold activated at some point this gesture
+         self._suppress_click_until_press = False   # drop a stray SELECT after a held gesture
++        self._select_edge_at = -100000.0
++        self._pending_gesture_select = None
+
+     def on_button(self, hid_code: int, button_state: int) -> None:
+         """Resolve a ``_hidC`` button and emit it once on **release** (matches a discrete click).
+@@ -112,6 +116,24 @@ class CommandRelay:
+         same path — one discrete ``KEY_VOL*`` step per press — because clients don't stream a hold
+         for them, so there's no auto-repeat lifecycle to drive.
+         """
++        # Preserve Play/Pause button down/up edges for ATV3 short/long track switching.
++        if hid_code == 14:
++            if button_state == 1:
++                self.emit(Command(Action.SEND_KEY, "KEY_PLAY_BACK", cmd="Press", source="hid-play-down"))
++            elif button_state in _BUTTON_RELEASES:
++                self.emit(Command(Action.SEND_KEY, "KEY_PLAY_BACK", cmd="Release", source="hid-play-up"))
++            return
++        # Preserve the native Select down/up lifetime for an actual long press.
++        if hid_code == 6:
++            self._select_edge_at = self._clock_ms()
++            if self._pending_gesture_select is not None:
++                self._pending_gesture_select.cancel()
++                self._pending_gesture_select = None
++            if button_state == 1:
++                self.emit(Command(Action.SEND_KEY,"KEY_ENTER",cmd="Press",source="hid-select-down"))
++            elif button_state in _BUTTON_RELEASES:
++                self.emit(Command(Action.SEND_KEY,"KEY_ENTER",cmd="Release",source="hid-select-up"))
++            return
+         if button_state not in _BUTTON_RELEASES:
+             return
+         mapping = resolve(hid_code)
+@@ -167,8 +189,27 @@ class CommandRelay:
+
+     def _emit_gesture(self, direction: str) -> None:
+         key = GESTURE_TO_SAMSUNG.get(direction)
+-        if key:
+-            self.emit(Command(Action.SEND_KEY, key, source=f"gesture:{direction}"))
++        if not key:
++            return
++        if key == "KEY_ENTER":
++            # iPhone often reports the same tap as a touch SELECT and HID Select.
++            # Delay touch SELECT briefly to let HID edges win; never emit both.
++            if self._clock_ms() - self._select_edge_at < 650.0:
++                return
++            if self._pending_gesture_select is not None:
++                return
++            try:
++                loop = asyncio.get_running_loop()
++            except RuntimeError:
++                self.emit(Command(Action.SEND_KEY,key,source=f"gesture:{direction}"))
++                return
++            def emit_if_no_hid() -> None:
++                self._pending_gesture_select=None
++                if self._clock_ms()-self._select_edge_at>=650.0:
++                    self.emit(Command(Action.SEND_KEY,key,source=f"gesture:{direction}"))
++            self._pending_gesture_select=loop.call_later(0.24,emit_if_no_hid)
++            return
++        self.emit(Command(Action.SEND_KEY,key,source=f"gesture:{direction}"))
+
+     def _update_hold(self) -> None:
+         """Per hold frame: arm a candidate direction and fire START once it has dwelled long enough."""
+@@ -180,6 +221,7 @@ class CommandRelay:
+             self._end_hold_if_active()
+             self._hold_dir = d
+             self._hold_since_ms = now if d is not None else 0.0
++            self._arm_hold_timer()
+         elif (
+             d is not None
+             and not self._hold_active
+@@ -191,8 +233,31 @@ class CommandRelay:
+                                   repeat=RepeatPhase.START, fast=True))
+                 self._hold_active = True
+                 self._hold_was_active = True
++                self._cancel_hold_timer()
++
++    def _cancel_hold_timer(self) -> None:
++        timer=self._hold_timer
++        self._hold_timer=None
++        if timer is not None:
++            timer.cancel()
++
++    def _arm_hold_timer(self) -> None:
++        self._cancel_hold_timer()
++        if self._hold_dir is None or self._hold_active:
++            return
++        try:
++            loop=asyncio.get_running_loop()
++        except RuntimeError:
++            return  # Synchronous fixture tests retain their historical behavior.
++        direction=self._hold_dir
++        def fire() -> None:
++            self._hold_timer=None
++            if self._hold_dir == direction and not self._hold_active:
++                self._update_hold()
++        self._hold_timer=loop.call_later(self._hold_config.activate_ms/1000.0+0.015,fire)
+
+     def _end_hold_if_active(self) -> None:
++        self._cancel_hold_timer()
+         """Emit a STOP for the currently-repeating direction, if any. Uses the OLD ``_hold_dir``."""
+         if self._hold_active and self._hold_dir is not None:
+             key = GESTURE_TO_SAMSUNG.get(self._hold_dir)
+@@ -202,14 +267,16 @@ class CommandRelay:
+         self._hold_active = False
+
+     def _reset_hold_state(self) -> None:
++        self._cancel_hold_timer()
+         self._hold_dir = None
+         self._hold_since_ms = 0.0
+         self._hold_active = False
++        self._hold_timer = None
+         self._hold_was_active = False
+
+     def emit(self, command: Command) -> None:
+         """Forward a command to the sink, collapsing a duplicate SELECT within the de-dupe window."""
+-        if command.samsung_key == "KEY_ENTER":
++        if command.samsung_key == "KEY_ENTER" and command.cmd == "Click":
+             now = self._clock_ms()
+             if now - self._last_select_ms < self._select_dedupe_ms:
+                 _LOGGER.debug("Dropping duplicate SELECT (%s)", command.source)
+diff --git a/src/atvr4samsung/companion/server.py b/src/atvr4samsung/companion/server.py
+index b56bb75..fe95041 100644
+--- a/src/atvr4samsung/companion/server.py
++++ b/src/atvr4samsung/companion/server.py
+@@ -61,7 +61,7 @@ _LOGGER = logging.getLogger(__name__)
+ #   FetchMediaControlStatus -> {"MediaControlFlags": 256};   _iMC event -> {"_mcF": 256}
+ # Sending only _mcF reads as 0 on the modern path, so the buttons stay greyed (no AirPlay-2 required —
+ # the earlier NO-GO was a wrong-key misdiagnosis). Volume=0x100 ⇒ relay to Samsung KEY_VOL*/KEY_MUTE.
+-_MEDIA_FLAGS = int(MediaControlFlags.Volume)
++_MEDIA_FLAGS = int(MediaControlFlags.Volume | MediaControlFlags.Play | MediaControlFlags.Pause | MediaControlFlags.NextTrack | MediaControlFlags.PreviousTrack)
+ _MODERN_FLAGS_KEY = "MediaControlFlags"  # iOS 26 MediaControlStatus / FetchMediaControlStatus
+ _LEGACY_FLAGS_KEY = "_mcF"               # legacy _iMC event (pyatv-style clients)
+
+@@ -415,7 +415,7 @@ class BridgeCompanionService(FakeCompanionService):
+         GetCaptionSettings reports captions disabled; everything else is acked empty.
+         """
+         content = message.get("_c", {})
+-        _LOGGER.debug("MediaControlCommand received")
++        _LOGGER.info("iPhone media control command code=%s", content.get("MediaControlCommand"))
+         try:
+             cmd = MediaControlCommand(content.get("MediaControlCommand"))
+         except ValueError:
+@@ -430,6 +430,10 @@ class BridgeCompanionService(FakeCompanionService):
+             if isinstance(new, (int, float)):
+                 key, self.state.volume = volume_key_for(self.state.volume, new)
+                 self._relay.emit(Command(Action.SEND_KEY, key, source="mcc:SetVolume"))
++        elif cmd in (MediaControlCommand.NextTrack, MediaControlCommand.PreviousTrack):
++            key = "KEY_NEXT_TRACK" if cmd is MediaControlCommand.NextTrack else "KEY_PREVIOUS_TRACK"
++            self._relay.emit(Command(Action.SEND_KEY, key, source=f"mcc:{cmd.name}"))
++            _LOGGER.info("Media track command relayed: %s", cmd.name)
+         elif cmd is MediaControlCommand.GetCaptionSettings:
+             # iOS issues GetCaptionSettings during session setup and tears the TV Remote session
+             # down ~2-4ms after our reply. An empty dict appears to be rejected; the caption-enabled
+@@ -457,6 +461,13 @@ class BridgeCompanionService(FakeCompanionService):
+             self.send_response(message, {})
+             return
+
++        _LOGGER.info("Legacy media control command code=%s", int(command.value))
++        if command in (MediaControlCommand.NextTrack, MediaControlCommand.PreviousTrack):
++            key = "KEY_NEXT_TRACK" if command is MediaControlCommand.NextTrack else "KEY_PREVIOUS_TRACK"
++            self._relay.emit(Command(Action.SEND_KEY, key, source=f"mcc:{command.name}"))
++            self.send_response(message, {})
++            return
++
+         if command in (MediaControlCommand.Play, MediaControlCommand.Pause):
+             self._relay.emit(
+                 Command(Action.SEND_KEY, "KEY_PLAY_BACK", source=f"mcc:{command.name}")
+@@ -535,11 +546,12 @@ class BridgeCompanionService(FakeCompanionService):
+         try:
+             from .protocol import keyed_archiver
+
+-            text_to_assert, insertion_text, deletion_count = keyed_archiver.read_archive_properties(
++            text_to_assert, insertion_text, deletion_count, text_to_commit = keyed_archiver.read_archive_properties(
+                 message["_c"]["_tiD"],
+                 ["textOperations", "textToAssert"],
+                 ["textOperations", "keyboardOutput", "insertionText"],
+                 ["textOperations", "keyboardOutput", "deletionCount"],
++                ["textOperations", "keyboardOutput", "textToCommit"],
+             )
+         except Exception:
+             self._malformed_frame("malformed RTI message")
+@@ -559,6 +571,12 @@ class BridgeCompanionService(FakeCompanionService):
+             text = text[: len(text) - n]
+         if insertion_text is not None:
+             text += str(insertion_text)
++        # iOS Chinese/Japanese IME commits confirmed candidate text here.
++        # Never use displayString: it is uncommitted composition text.
++        if isinstance(text_to_commit, str) and text_to_commit:
++            if text_to_commit != insertion_text and text_to_commit != text_to_assert:
++                text += text_to_commit
++            _LOGGER.info("RTI committed IME text: non_ascii=%s", any(ord(c)>127 for c in text_to_commit))
+         if len(text) > _RTI_MAX_TEXT:
+             text = text[:_RTI_MAX_TEXT]  # bound attacker/runaway growth
+         self.session.rti_text = text

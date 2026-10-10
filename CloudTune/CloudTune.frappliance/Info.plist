@@ -7,8 +7,8 @@
     <key>CFBundleIdentifier</key><string>org.atv3.cloudtune</string>
     <key>CFBundleName</key><string>CloudTune</string>
     <key>CFBundlePackageType</key><string>BNDL</string>
-    <key>CFBundleShortVersionString</key><string>1.0.0</string>
-    <key>CFBundleVersion</key><string>1.0.0</string>
+    <key>CFBundleShortVersionString</key><string>1.1.0</string>
+    <key>CFBundleVersion</key><string>1.1.0</string>
     <key>FRApplianceIcon</key><string>AppIcon.png</string>
     <key>FRApplianceIdentifier</key><string>cloudtune</string>
     <key>FRApplianceName</key><string>CloudTune</string>

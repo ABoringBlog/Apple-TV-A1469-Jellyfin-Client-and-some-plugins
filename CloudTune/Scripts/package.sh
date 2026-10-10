@@ -14,8 +14,8 @@ cd "$repo"
 [ ! -e "$out" ] || { echo "Output already exists: $out" >&2; exit 1; }
 [ -f "$bundle/CloudTune" ] && [ -f "$bundle/Info.plist" ]
 package=org.atv3.cloudtune
-base_version=1.0.0
-version="$base_version-public1-$lang"
+base_version=1.1.0
+version="$base_version-public2-$lang"
 arch=iphoneos-arm
 if [ "$lang" = en ]; then display="CloudTune for Apple TV 3 (English)"; else display="云律音乐 for Apple TV 3 (Chinese)"; fi
 mkdir -p "$out/stage/DEBIAN" "$out/stage/Applications/AppleTV.app/Appliances"
@@ -24,7 +24,7 @@ Package: $package
 Name: $display
 Version: $version
 Architecture: $arch
-Description: CloudTune v1, an independent Apple TV 3 music client; requires a Mac CloudTune Bridge and an external compatible music API service
+Description: CloudTune v1.1, an independent Apple TV 3 music client with phone text-input integration; requires a Mac CloudTune Bridge and an external compatible music API service
 Maintainer: ABoringBlog
 Section: Multimedia
 EOF
@@ -44,8 +44,8 @@ expected={
     "CFBundleName":"CloudTune",
     "FRApplianceIdentifier":"cloudtune",
     "FRApplianceName":"CloudTune",
-    "CFBundleVersion":"1.0.0",
-    "CFBundleShortVersionString":"1.0.0",
+    "CFBundleVersion":"1.1.0",
+    "CFBundleShortVersionString":"1.1.0",
     "MinimumOSVersion":"8.0",
 }
 for key,value in expected.items():
